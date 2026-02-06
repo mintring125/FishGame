@@ -15,14 +15,18 @@ window.Bubble = class Bubble extends Phaser.GameObjects.Sprite {
      * @param {Phaser.Scene} scene - The scene this bubble belongs to
      * @param {number} x - Initial x position
      * @param {number} y - Initial y position
+     * @param {number} [themeTint] - Optional theme-based tint color (hex)
      */
-    constructor(scene, x, y) {
+    constructor(scene, x, y, themeTint) {
         super(scene, x, y, 'bubble');
 
         // Add to scene
         scene.add.existing(this);
 
         var C = window.Constants;
+
+        // Store theme tint for later use in resets
+        this._themeTint = themeTint || null;
 
         // ---- Random Size ----
         var sizeRange = C.BUBBLE_MAX_SIZE - C.BUBBLE_MIN_SIZE;
@@ -50,9 +54,13 @@ window.Bubble = class Bubble extends Phaser.GameObjects.Sprite {
         var alphaVariation = (Math.random() - 0.5) * 0.15;
         this.setAlpha(Phaser.Math.Clamp(C.BUBBLE_ALPHA + alphaVariation, 0.1, 0.5));
 
-        // Slight blue/white tint variation for depth
-        var tintOptions = [0xFFFFFF, 0xCCEEFF, 0xAADDFF, 0xDDFFFF];
-        this.setTint(tintOptions[Math.floor(Math.random() * tintOptions.length)]);
+        // Apply theme tint if provided, otherwise use default variations
+        if (this._themeTint) {
+            this.setTint(this._themeTint);
+        } else {
+            var tintOptions = [0xFFFFFF, 0xCCEEFF, 0xAADDFF, 0xDDFFFF];
+            this.setTint(tintOptions[Math.floor(Math.random() * tintOptions.length)]);
+        }
     }
 
     /**

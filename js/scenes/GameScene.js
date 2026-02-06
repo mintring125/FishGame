@@ -53,6 +53,11 @@ window.GameScene = class GameScene extends Phaser.Scene {
         }
 
         // ----------------------------------------------------------
+        // 0. APPLY LEVEL THEME
+        // ----------------------------------------------------------
+        this._applyLevelTheme();
+
+        // ----------------------------------------------------------
         // 1. BACKGROUND: Ocean gradient
         // ----------------------------------------------------------
         this._createOceanBackground();
@@ -109,9 +114,9 @@ window.GameScene = class GameScene extends Phaser.Scene {
         // ----------------------------------------------------------
         // 6.5 VIRTUAL JOYSTICK
         // ----------------------------------------------------------
-        this.joystick = new window.VirtualJoystick(this, C.GAME_WIDTH - 120, C.GAME_HEIGHT - 120, {
-            baseRadius: 60,
-            thumbRadius: 28,
+        this.joystick = new window.VirtualJoystick(this, C.GAME_WIDTH - 105, C.GAME_HEIGHT - 105, {
+            baseRadius: 48,
+            thumbRadius: 20,
             baseAlpha: 0.3,
             thumbAlpha: 0.5
         });
@@ -735,6 +740,36 @@ window.GameScene = class GameScene extends Phaser.Scene {
     // ==================================================================
 
     /**
+     * Apply the visual theme for the current level.
+     * Modifies Constants.OCEAN_COLORS to match the level theme.
+     */
+    _applyLevelTheme() {
+        var C = window.Constants;
+
+        // Get theme for current level (1-indexed, array is 0-indexed)
+        var themeIndex = this._initLevel - 1;
+
+        if (C.LEVEL_THEMES && C.LEVEL_THEMES[themeIndex]) {
+            this._currentTheme = C.LEVEL_THEMES[themeIndex];
+
+            // Override OCEAN_COLORS with theme colors
+            C.OCEAN_COLORS.SURFACE = this._currentTheme.ocean.SURFACE;
+            C.OCEAN_COLORS.MID = this._currentTheme.ocean.MID;
+            C.OCEAN_COLORS.DEEP = this._currentTheme.ocean.DEEP;
+            C.OCEAN_COLORS.ABYSS = this._currentTheme.ocean.ABYSS;
+
+            // Store tints for later use
+            this._lightTint = this._currentTheme.lightTint;
+            this._bubbleTint = this._currentTheme.bubbleTint;
+        } else {
+            // Fallback: use default colors
+            this._currentTheme = null;
+            this._lightTint = 0xFFFFFF;
+            this._bubbleTint = 0xFFFFFF;
+        }
+    }
+
+    /**
      * Create the ocean gradient background using a Graphics object.
      */
     _createOceanBackground() {
@@ -825,6 +860,11 @@ window.GameScene = class GameScene extends Phaser.Scene {
             ray.setAlpha(C.LIGHT_RAY_ALPHA);
             ray.setDepth(C.DEPTH.LIGHT_RAYS);
 
+            // Apply theme tint
+            if (this._lightTint) {
+                ray.setTint(this._lightTint);
+            }
+
             // Slight rotation variance
             var baseAngle = Phaser.Math.FloatBetween(-8, 8);
             ray.setAngle(baseAngle);
@@ -853,7 +893,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
             var by = Phaser.Math.Between(0, C.GAME_HEIGHT);
 
             if (window.Bubble) {
-                var bubble = new window.Bubble(this, bx, by);
+                var bubble = new window.Bubble(this, bx, by, this._bubbleTint);
                 bubble.setDepth(C.DEPTH.BUBBLES);
                 this._bubbles.push(bubble);
             } else {

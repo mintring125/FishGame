@@ -18,7 +18,7 @@ class LevelClearScene extends Phaser.Scene {
 
     // Ocean gradient background
     const graphics = this.make.graphics({ x: 0, y: 0, add: false });
-    graphics.fillGradientStyle(0x1a5f7a, 0x1a5f7a, 0x2ba3d0, 0x2ba3d0, 1);
+    graphics.fillGradientStyle(0x33BBE8, 0x33BBE8, 0x1A8AB8, 0x1A8AB8, 1);
     graphics.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     graphics.generateTexture('levelClearBg', GAME_WIDTH, GAME_HEIGHT);
     graphics.destroy();
@@ -69,9 +69,17 @@ class LevelClearScene extends Phaser.Scene {
       ease: 'Elastic.out'
     });
 
-    // Subtitle - Encouraging
+    // Subtitle - Show theme name if available
+    const C = window.Constants;
+    const themeIndex = this.nextLevel - 2; // Next level's theme (current+1, but -1 for 0-index = current)
+    let subtitleMsg = '잘했어!';
+
+    if (C.LEVEL_THEMES && C.LEVEL_THEMES[themeIndex]) {
+      subtitleMsg = `다음: ${C.LEVEL_THEMES[themeIndex].name}`;
+    }
+
     const subtitleText = this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50, '잘했어!', {
+      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50, subtitleMsg, {
         fontFamily: 'Noto Sans KR, sans-serif',
         fontSize: '48px',
         fontStyle: 'bold',
@@ -110,9 +118,15 @@ class LevelClearScene extends Phaser.Scene {
       delay: 600
     });
 
-    // Next level indicator
+    // Next level indicator with theme name
+    const C = window.Constants;
+    let nextLevelLabel = `다음: 레벨 ${this.nextLevel}`;
+    if (C.LEVEL_THEMES && C.LEVEL_THEMES[this.nextLevel - 1]) {
+      nextLevelLabel += ` - ${C.LEVEL_THEMES[this.nextLevel - 1].name}`;
+    }
+
     const nextLevelText = this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 100, `다음: 레벨 ${this.nextLevel}`, {
+      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 100, nextLevelLabel, {
         fontFamily: 'Noto Sans KR, sans-serif',
         fontSize: '32px',
         color: '#90EE90',

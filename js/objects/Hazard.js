@@ -55,9 +55,9 @@ window.Hazard = class Hazard extends Phaser.Physics.Arcade.Sprite {
         this.setScale(0.9);
         this._baseScale = 0.9;
 
-        // Hitbox
-        this.body.setSize(this.width * 0.7, this.height * 0.7);
-        this.body.setOffset(this.width * 0.15, this.height * 0.15);
+        // Hitbox conservative: body core only (tentacles/spines excluded)
+        this.body.setSize(this.width * 0.5, this.height * 0.5);
+        this.body.setOffset(this.width * 0.25, this.height * 0.25);
 
         // ---- Initialize Type ----
         this._initType(type);
@@ -209,9 +209,9 @@ window.Hazard = class Hazard extends Phaser.Physics.Arcade.Sprite {
             ease: 'Back.easeOut'
         });
 
-        // Expand hitbox for inflated size
-        this.body.setSize(this.width * 0.85, this.height * 0.85);
-        this.body.setOffset(this.width * 0.075, this.height * 0.075);
+        // Expand hitbox for inflated size (still conservative)
+        this.body.setSize(this.width * 0.65, this.height * 0.65);
+        this.body.setOffset(this.width * 0.175, this.height * 0.175);
 
         // Warning tint
         this.setTint(0xFF6666);
@@ -245,9 +245,9 @@ window.Hazard = class Hazard extends Phaser.Physics.Arcade.Sprite {
             ease: 'Quad.easeOut'
         });
 
-        // Reset hitbox
-        this.body.setSize(this.width * 0.7, this.height * 0.7);
-        this.body.setOffset(this.width * 0.15, this.height * 0.15);
+        // Reset hitbox: body core only
+        this.body.setSize(this.width * 0.5, this.height * 0.5);
+        this.body.setOffset(this.width * 0.25, this.height * 0.25);
 
         // Clear warning tint
         this.clearTint();
@@ -324,9 +324,9 @@ window.Hazard = class Hazard extends Phaser.Physics.Arcade.Sprite {
         // Type-specific setup
         this._initType(type);
 
-        // Reset hitbox
-        this.body.setSize(this.width * 0.7, this.height * 0.7);
-        this.body.setOffset(this.width * 0.15, this.height * 0.15);
+        // Reset hitbox: body core only
+        this.body.setSize(this.width * 0.5, this.height * 0.5);
+        this.body.setOffset(this.width * 0.25, this.height * 0.25);
         this.body.enable = true;
 
         // Reset visuals

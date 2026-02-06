@@ -32,7 +32,7 @@ window.Constants = {
 
     // Number of fish eaten required to reach next size
     // Index = current size, value = total fish needed to grow to next
-    GROWTH_THRESHOLDS: [5, 12, 22, 35, 50],
+    GROWTH_THRESHOLDS: [4, 9, 16, 25, 36],
 
     // ========================================
     // PLAYER & LIVES
@@ -41,7 +41,7 @@ window.Constants = {
     INVINCIBILITY_TIME: 1500,       // ms of invincibility after taking a hit
     GROWTH_INVINCIBILITY: 500,      // ms of invincibility after growing
     PLAYER_START_SIZE: 0,           // Start as TINY
-    PLAYER_HITBOX_SCALE: 0.7,       // Hitbox is 70% of visual size (forgiving)
+    PLAYER_HITBOX_SCALE: 0.55,      // Hitbox is 55% of visual size (conservative, body-only)
 
     // ========================================
     // FRENZY / COMBO SYSTEM
@@ -71,9 +71,9 @@ window.Constants = {
     // ========================================
     // LEVELS
     // ========================================
-    LEVEL_COUNT: 15,
-    LEVEL_CLEAR_SCORE_BASE: 500,    // Base score to clear level 1
-    LEVEL_CLEAR_MULTIPLIER: 1.6,    // Each level needs 1.6x more score
+    LEVEL_COUNT: 10,
+    LEVEL_CLEAR_SCORE_BASE: 400,    // Base score to clear level 1
+    LEVEL_CLEAR_MULTIPLIER: 1.35,    // Each level needs 1.35x more score
     LEVEL_TRANSITION_DELAY: 2000,   // ms before showing level clear screen
 
     // ========================================
@@ -197,22 +197,22 @@ window.Constants = {
     // VISUAL & EFFECTS
     // ========================================
     OCEAN_COLORS: {
-        SURFACE:   0x33CCFF,    // Light blue at top
-        MID:       0x1A9FD4,    // Mid ocean blue
-        DEEP:      0x0D5F8A,    // Deep blue at bottom
-        ABYSS:     0x0A3D5C     // Darkest depths
+        SURFACE:   0x66DDFF,
+        MID:       0x33BBE8,
+        DEEP:      0x1A8AB8,
+        ABYSS:     0x146E90
     },
 
-    BUBBLE_COUNT: 20,               // Background bubble count
+    BUBBLE_COUNT: 28,               // Background bubble count
     BUBBLE_MIN_SIZE: 2,
     BUBBLE_MAX_SIZE: 8,
     BUBBLE_MIN_SPEED: 20,
     BUBBLE_MAX_SPEED: 60,
-    BUBBLE_ALPHA: 0.4,
+    BUBBLE_ALPHA: 0.55,
 
     // Light rays from surface
-    LIGHT_RAY_COUNT: 7,
-    LIGHT_RAY_ALPHA: 0.14,
+    LIGHT_RAY_COUNT: 9,
+    LIGHT_RAY_ALPHA: 0.25,
 
     // ========================================
     // ANIMATION
@@ -252,27 +252,98 @@ window.Constants = {
     // Each level adjusts these multipliers
     // ========================================
     DIFFICULTY: {
-        // Enemy speed multiplier per level (level 1 = 1.0)
         speedScale: function(level) {
+            return 1.0 + (level - 1) * 0.06;
+        },
+        spawnRateScale: function(level) {
             return 1.0 + (level - 1) * 0.08;
         },
-        // Spawn rate multiplier per level
-        spawnRateScale: function(level) {
-            return 1.0 + (level - 1) * 0.12;
-        },
-        // Proportion of larger fish per level
         largeFishChance: function(level) {
-            return Math.min(0.05 + (level - 1) * 0.04, 0.5);
+            return Math.min(0.03 + (level - 1) * 0.03, 0.35);
         },
-        // Hazard spawn chance per level
         hazardChance: function(level) {
-            return 0.02 + (level - 1) * 0.008;
+            return 0.01 + (level - 1) * 0.006;
         },
-        // Score needed to clear a level
         levelClearScore: function(level) {
-            return Math.floor(500 * Math.pow(1.6, level - 1));
+            return Math.floor(400 * Math.pow(1.35, level - 1));
         }
     },
+
+    // ========================================
+    // LEVEL THEMES - Visual theme per level
+    // ========================================
+    LEVEL_THEMES: [
+        // Level 1: Sunny Shallows
+        {
+            name: '맑은 얕은 바다',
+            ocean: { SURFACE: 0x66DDFF, MID: 0x33BBE8, DEEP: 0x1A8AB8, ABYSS: 0x146E90 },
+            lightTint: 0xFFFFDD,
+            bubbleTint: 0xCCEEFF
+        },
+        // Level 2: Coral Reef
+        {
+            name: '산호초',
+            ocean: { SURFACE: 0xFF99AA, MID: 0xE87799, DEEP: 0xCC5577, ABYSS: 0xAA4466 },
+            lightTint: 0xFFDDDD,
+            bubbleTint: 0xFFBBCC
+        },
+        // Level 3: Tropical Lagoon
+        {
+            name: '열대 석호',
+            ocean: { SURFACE: 0x55EEBB, MID: 0x33CCAA, DEEP: 0x22AA88, ABYSS: 0x118866 },
+            lightTint: 0xDDFFEE,
+            bubbleTint: 0xAAFFDD
+        },
+        // Level 4: Golden Sea
+        {
+            name: '황금빛 바다',
+            ocean: { SURFACE: 0xFFDD55, MID: 0xEEBB33, DEEP: 0xCC9922, ABYSS: 0xAA7711 },
+            lightTint: 0xFFFFAA,
+            bubbleTint: 0xFFEEBB
+        },
+        // Level 5: Emerald Cove
+        {
+            name: '에메랄드 만',
+            ocean: { SURFACE: 0x55DD88, MID: 0x33BB66, DEEP: 0x229955, ABYSS: 0x117744 },
+            lightTint: 0xDDFFDD,
+            bubbleTint: 0xBBFFCC
+        },
+        // Level 6: Sunset Ocean
+        {
+            name: '노을 바다',
+            ocean: { SURFACE: 0xFF8855, MID: 0xEE6644, DEEP: 0xCC4433, ABYSS: 0xAA3322 },
+            lightTint: 0xFFDDAA,
+            bubbleTint: 0xFFCCBB
+        },
+        // Level 7: Crystal Waters
+        {
+            name: '수정 바다',
+            ocean: { SURFACE: 0xBB88FF, MID: 0x9966EE, DEEP: 0x7744CC, ABYSS: 0x5533AA },
+            lightTint: 0xEEDDFF,
+            bubbleTint: 0xDDBBFF
+        },
+        // Level 8: Rainbow Reef
+        {
+            name: '무지개 산호',
+            ocean: { SURFACE: 0xFF88DD, MID: 0x88DDFF, DEEP: 0x88FFAA, ABYSS: 0xFFDD88 },
+            lightTint: 0xFFFFFF,
+            bubbleTint: 0xFFDDFF
+        },
+        // Level 9: Starlight Sea
+        {
+            name: '별빛 바다',
+            ocean: { SURFACE: 0x4488DD, MID: 0x3366BB, DEEP: 0x224499, ABYSS: 0x113377 },
+            lightTint: 0xCCDDFF,
+            bubbleTint: 0xAABBFF
+        },
+        // Level 10: Paradise Deep
+        {
+            name: '낙원 심해',
+            ocean: { SURFACE: 0x44DDCC, MID: 0x33BBAA, DEEP: 0x229988, ABYSS: 0x117766 },
+            lightTint: 0xDDFFFF,
+            bubbleTint: 0xBBFFEE
+        }
+    ],
 
     // ========================================
     // AUDIO (placeholder keys for SoundSystem)

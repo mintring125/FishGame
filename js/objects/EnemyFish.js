@@ -49,9 +49,10 @@ window.EnemyFish = class EnemyFish extends Phaser.Physics.Arcade.Sprite {
         this.setScale(scale);
         this.setDepth(C.DEPTH.ENEMY_FISH);
 
-        // Hitbox slightly smaller than visual for fair gameplay
-        this.body.setSize(this.width * 0.75, this.height * 0.7);
-        this.body.setOffset(this.width * 0.125, this.height * 0.15);
+        // Hitbox conservative: body ellipse only, offset toward head (right)
+        // Fish body center is at ~48% width; tail extends far left, fins extend vertically
+        this.body.setSize(this.width * 0.5, this.height * 0.5);
+        this.body.setOffset(this.width * 0.25, this.height * 0.25);
 
         // Flip sprite based on direction
         this.flipX = this.direction < 0;
@@ -225,9 +226,9 @@ window.EnemyFish = class EnemyFish extends Phaser.Physics.Arcade.Sprite {
         this.clearTint();
         this.setDepth(C.DEPTH.ENEMY_FISH);
 
-        // Reset hitbox
-        this.body.setSize(this.width * 0.75, this.height * 0.7);
-        this.body.setOffset(this.width * 0.125, this.height * 0.15);
+        // Reset hitbox: body ellipse only, offset toward head
+        this.body.setSize(this.width * 0.5, this.height * 0.5);
+        this.body.setOffset(this.width * 0.25, this.height * 0.25);
         this.body.enable = true;
 
         // Make active and visible

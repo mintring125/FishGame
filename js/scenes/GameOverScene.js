@@ -16,9 +16,9 @@ class GameOverScene extends Phaser.Scene {
     const GAME_WIDTH = window.Constants.GAME_WIDTH;
     const GAME_HEIGHT = window.Constants.GAME_HEIGHT;
 
-    // Ocean gradient background
+    // Ocean gradient background - use brighter colors
     const graphics = this.make.graphics({ x: 0, y: 0, add: false });
-    graphics.fillGradientStyle(0x1a3a52, 0x1a3a52, 0x0d5a7a, 0x0d5a7a, 1);
+    graphics.fillGradientStyle(0x33BBE8, 0x33BBE8, 0x1A8AB8, 0x1A8AB8, 1);
     graphics.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     graphics.generateTexture('gameOverBg', GAME_WIDTH, GAME_HEIGHT);
     graphics.destroy();
