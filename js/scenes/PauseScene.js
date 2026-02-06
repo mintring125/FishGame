@@ -23,7 +23,8 @@ class PauseScene extends Phaser.Scene {
     this.add
       .rectangle(centerX, centerY, width, height, 0x000000, 0.6)
       .setOrigin(0.5, 0.5)
-      .setDepth(200);
+      .setDepth(1500)
+      .setInteractive(); // Capture clicks to prevent game interaction behind
 
     // Title: "일시정지" (Paused)
     this.add
@@ -33,7 +34,7 @@ class PauseScene extends Phaser.Scene {
         align: 'center'
       })
       .setOrigin(0.5, 0.5)
-      .setDepth(201);
+      .setDepth(1501);
 
     // Score and Level info
     this.add
@@ -43,7 +44,7 @@ class PauseScene extends Phaser.Scene {
         align: 'center'
       })
       .setOrigin(0.5, 0.5)
-      .setDepth(201);
+      .setDepth(1501);
 
     this.add
       .text(centerX, centerY + 10, `점수: ${this.gameData.score}`, {
@@ -52,7 +53,7 @@ class PauseScene extends Phaser.Scene {
         align: 'center'
       })
       .setOrigin(0.5, 0.5)
-      .setDepth(201);
+      .setDepth(1501);
 
     // Button dimensions
     const buttonWidth = 280;
@@ -104,7 +105,7 @@ class PauseScene extends Phaser.Scene {
    * Create a styled button with hover and press effects
    */
   createButton(x, y, width, height, radius, text, color, hoverColor, callback) {
-    const button = this.add.graphics().setDepth(201);
+    const button = this.add.graphics().setDepth(1900);
     const textObj = this.add
       .text(x, y, text, {
         font: 'bold 28px Noto Sans KR, sans-serif',
@@ -112,7 +113,7 @@ class PauseScene extends Phaser.Scene {
         align: 'center'
       })
       .setOrigin(0.5, 0.5)
-      .setDepth(202);
+      .setDepth(1901);
 
     // Draw initial button
     const drawButton = (fillColor) => {
@@ -127,8 +128,9 @@ class PauseScene extends Phaser.Scene {
     const hitZone = this.add
       .zone(x, y, width, height)
       .setOrigin(0.5, 0.5)
-      .setInteractive()
-      .setDepth(201);
+      .setSize(width, height)
+      .setInteractive({ useHandCursor: true })
+      .setDepth(2000); // Top layer
 
     // Hover effects
     hitZone.on('pointerover', () => {
@@ -168,20 +170,39 @@ class PauseScene extends Phaser.Scene {
    * Restart the game from level 1
    */
   restartGame() {
-    this.scene.stop('PauseScene');
-    this.scene.stop('GameScene');
-    this.scene.stop('HUDScene');
-    this.scene.start('GameScene', { level: 1, score: 0 });
+    // Capture scene manager reference before stopping this scene
+    const sceneManager = this.scene;
+    window.setTimeout(() => {
+      try {
+        if (sceneManager.isActive('HUDScene')) sceneManager.stop('HUDScene');
+      } catch (e) {}
+      try {
+        sceneManager.stop('PauseScene');
+      } catch (e) {}
+      try {
+        sceneManager.stop('GameScene');
+      } catch (e) {}
+      sceneManager.start('GameScene', { level: 1, score: 0 });
+    }, 10);
   }
 
   /**
    * Return to main menu
    */
   goToMenu() {
-    this.scene.stop('PauseScene');
-    this.scene.stop('GameScene');
-    this.scene.stop('HUDScene');
-    this.scene.start('MenuScene');
+    const sceneManager = this.scene;
+    window.setTimeout(() => {
+      try {
+        if (sceneManager.isActive('HUDScene')) sceneManager.stop('HUDScene');
+      } catch (e) {}
+      try {
+        sceneManager.stop('PauseScene');
+      } catch (e) {}
+      try {
+        sceneManager.stop('GameScene');
+      } catch (e) {}
+      sceneManager.start('MenuScene');
+    }, 10);
   }
 }
 

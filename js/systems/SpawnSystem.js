@@ -359,15 +359,27 @@ window.SpawnSystem = class SpawnSystem {
      */
     reset() {
         var deactivateAll = function (group) {
-            group.getChildren().forEach(function (obj) {
-                obj.setActive(false).setVisible(false);
-                if (obj.body) obj.body.enable = false;
+            if (!group || !group.getChildren) return;
+            var children;
+            try {
+                children = group.getChildren();
+            } catch (e) {
+                return;
+            }
+            if (!children) return;
+            children.forEach(function (obj) {
+                if (obj && obj.active !== undefined) {
+                    obj.setActive(false).setVisible(false);
+                    if (obj.body) obj.body.enable = false;
+                }
             });
         };
 
-        deactivateAll(this.pools.enemy);
-        deactivateAll(this.pools.powerUp);
-        deactivateAll(this.pools.hazard);
+        if (this.pools) {
+            deactivateAll(this.pools.enemy);
+            deactivateAll(this.pools.powerUp);
+            deactivateAll(this.pools.hazard);
+        }
 
         this.spawnTimer   = 0;
         this.powerUpTimer = 0;

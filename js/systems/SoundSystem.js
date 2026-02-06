@@ -6,17 +6,15 @@ class SoundSystem {
   constructor(scene) {
     this.scene = scene;
 
-    // Initialize AudioContext
-    try {
-      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    } catch (e) {
-      console.warn('Web Audio API not supported', e);
-      this.audioContext = null;
-    }
+    // Defer AudioContext creation until first user gesture
+    this.audioContext = null;
+    this._audioInitialized = false;
 
     // Load settings from localStorage
     this.soundEnabled = localStorage.getItem('ff_sound_enabled') !== 'false';
-    this.musicEnabled = localStorage.getItem('ff_music_enabled') !== 'false';
+    // Default BGM to OFF (false) unless explicitly enabled
+    const storedMusic = localStorage.getItem('ff_music_enabled');
+    this.musicEnabled = storedMusic === 'true';
 
     // Track active sounds
     this.activeSounds = new Set();
@@ -25,21 +23,42 @@ class SoundSystem {
     this.currentBGM = null;
     this.bgmOscillators = [];
 
-    // Master gain nodes
-    if (this.audioContext) {
-      this.masterGain = this.audioContext.createGain();
-      this.masterGain.connect(this.audioContext.destination);
+    this.masterGain = null;
+    this.sfxGain = null;
+    this.musicGain = null;
+  }
 
-      this.sfxGain = this.audioContext.createGain();
-      this.sfxGain.connect(this.masterGain);
+  /**
+   * Lazily initialize AudioContext on first use (after user gesture)
+   */
+  _ensureAudioContext() {
+    if (this._audioInitialized) return this.audioContext != null;
 
-      this.musicGain = this.audioContext.createGain();
-      this.musicGain.connect(this.masterGain);
-
-      // Set initial volumes
-      this.sfxGain.gain.value = this.soundEnabled ? 0.3 : 0;
-      this.musicGain.gain.value = this.musicEnabled ? 0.15 : 0;
+    try {
+      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      this._audioInitialized = true;
+    } catch (e) {
+      console.warn('Web Audio API not supported', e);
+      this.audioContext = null;
+      this._audioInitialized = true;
+      return false;
     }
+
+    // Master gain nodes
+    this.masterGain = this.audioContext.createGain();
+    this.masterGain.connect(this.audioContext.destination);
+
+    this.sfxGain = this.audioContext.createGain();
+    this.sfxGain.connect(this.masterGain);
+
+    this.musicGain = this.audioContext.createGain();
+    this.musicGain.connect(this.masterGain);
+
+    // Set initial volumes
+    this.sfxGain.gain.value = this.soundEnabled ? 0.3 : 0;
+    this.musicGain.gain.value = this.musicEnabled ? 0.15 : 0;
+
+    return true;
   }
 
   /**
@@ -55,7 +74,8 @@ class SoundSystem {
    * Play a sound effect by key
    */
   play(key) {
-    if (!this.audioContext || !this.soundEnabled) return;
+    if (!this.soundEnabled) return;
+    if (!this._ensureAudioContext()) return;
 
     this.resume();
 
@@ -385,7 +405,8 @@ class SoundSystem {
    * Play background music (looping)
    */
   playBGM(key) {
-    if (!this.audioContext || !this.musicEnabled) return;
+    if (!this.musicEnabled) return;
+    if (!this._ensureAudioContext()) return;
 
     this.stopBGM();
     this.resume();
@@ -461,7 +482,7 @@ class SoundSystem {
 
       // Clear previous iteration's expired oscillators to prevent memory leak
       this.bgmOscillators.forEach(node => {
-        try { node.disconnect(); } catch (e) {}
+        try { node.disconnect(); } catch (e) { }
       });
       this.bgmOscillators = [];
 
@@ -571,7 +592,7 @@ class SoundSystem {
     this.soundEnabled = enabled;
     localStorage.setItem('ff_sound_enabled', enabled);
 
-    if (this.sfxGain) {
+    if (this.sfxGain && this.audioContext) {
       this.sfxGain.gain.setValueAtTime(enabled ? 0.3 : 0, this.audioContext.currentTime);
     }
   }
@@ -583,7 +604,7 @@ class SoundSystem {
     this.musicEnabled = enabled;
     localStorage.setItem('ff_music_enabled', enabled);
 
-    if (this.musicGain) {
+    if (this.musicGain && this.audioContext) {
       this.musicGain.gain.setValueAtTime(enabled ? 0.15 : 0, this.audioContext.currentTime);
     }
 

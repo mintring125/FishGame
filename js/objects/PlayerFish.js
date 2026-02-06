@@ -103,60 +103,25 @@ window.PlayerFish = class PlayerFish extends Phaser.Physics.Arcade.Sprite {
                 effectiveSpeed *= C.POWER_UP_SPEED_BOOST;
             }
 
-            var moveX = joystick.direction.x * joystick.force * effectiveSpeed * deltaSeconds;
-            var moveY = joystick.direction.y * joystick.force * effectiveSpeed * deltaSeconds;
+            // [FIX 1] Reduce joystick sensitivity/speed slightly for better control
+            // 80% of max speed feels more controllable with a virtual joystick
+            var joystickSpeed = effectiveSpeed * 0.8;
+
+            var moveX = joystick.direction.x * joystick.force * joystickSpeed * deltaSeconds;
+            var moveY = joystick.direction.y * joystick.force * joystickSpeed * deltaSeconds;
 
             this.x += moveX;
             this.y += moveY;
+
+            // [FIX 2] Sync target position to current position
+            // This prevents the fish from snapping back to an old pointer position when joystick is released
+            this._targetX = this.x;
+            this._targetY = this.y;
 
             // Face direction of movement
             if (Math.abs(joystick.direction.x) > 0.1) {
                 this._lastDirection = joystick.direction.x > 0 ? 1 : -1;
                 this.flipX = this._lastDirection < 0;
-            }
-        } else {
-            // ---- Fallback: pointer-based movement for desktop/mouse ----
-            var pointer = this.scene.input.activePointer;
-            if (pointer && pointer.isDown) {
-                // Only track if this pointer is NOT the joystick pointer
-                if (!joystick || joystick._activePointerId === null || pointer.id !== joystick._activePointerId) {
-                    this._targetX = pointer.worldX;
-                    this._targetY = pointer.worldY;
-                }
-            }
-
-            // Calculate effective speed, accounting for power-ups
-            var effectiveSpeed = this.speed;
-            if (this.activePowerUps.has(C.POWER_UP_TYPES.SPEED)) {
-                effectiveSpeed *= C.POWER_UP_SPEED_BOOST;
-            }
-
-            // Lerp toward target position
-            var dx = this._targetX - this.x;
-            var dy = this._targetY - this.y;
-            var distance = Math.sqrt(dx * dx + dy * dy);
-
-            if (distance > 2) {
-                var maxMove = effectiveSpeed * deltaSeconds;
-                var lerpAmount = Math.min(this._lerpFactor * (deltaSeconds * 1000 || 16.67) / 16.67, 1);
-
-                var moveX = dx * lerpAmount;
-                var moveY = dy * lerpAmount;
-
-                var moveDistance = Math.sqrt(moveX * moveX + moveY * moveY);
-                if (moveDistance > maxMove) {
-                    var scale = maxMove / moveDistance;
-                    moveX *= scale;
-                    moveY *= scale;
-                }
-
-                this.x += moveX;
-                this.y += moveY;
-
-                if (Math.abs(dx) > 1) {
-                    this._lastDirection = dx > 0 ? 1 : -1;
-                    this.flipX = this._lastDirection < 0;
-                }
             }
         }
 

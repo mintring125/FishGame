@@ -342,9 +342,13 @@ window.MenuScene = class MenuScene extends Phaser.Scene {
         var startY = H * 0.42;
         var spacing = 90;
 
+        var btnW = 280;
+        var btnH = 70;
+        var btnFontSize = '32px';
+
         // --- "시작" (Start) button - primary ---
-        this._createButton(centerX, startY, 300, 80, '시작', {
-            fontSize: '36px',
+        this._createButton(centerX, startY, btnW, btnH, '시작', {
+            fontSize: btnFontSize,
             fillColor: 0x0088CC,
             fillColorHover: 0x00AAEE,
             strokeColor: 0x006699,
@@ -355,8 +359,8 @@ window.MenuScene = class MenuScene extends Phaser.Scene {
         });
 
         // --- "도움말" (Tutorial) button ---
-        this._createButton(centerX, startY + spacing, 250, 65, '도움말', {
-            fontSize: '28px',
+        this._createButton(centerX, startY + spacing, btnW, btnH, '도움말', {
+            fontSize: btnFontSize,
             fillColor: 0x2E7D32,
             fillColorHover: 0x43A047,
             strokeColor: 0x1B5E20,
@@ -371,8 +375,8 @@ window.MenuScene = class MenuScene extends Phaser.Scene {
         });
 
         // --- "설정" (Settings) button ---
-        this._createButton(centerX, startY + spacing * 2, 250, 65, '설정', {
-            fontSize: '28px',
+        this._createButton(centerX, startY + spacing * 2, btnW, btnH, '설정', {
+            fontSize: btnFontSize,
             fillColor: 0x546E7A,
             fillColorHover: 0x78909C,
             strokeColor: 0x37474F,
@@ -524,8 +528,16 @@ window.MenuScene = class MenuScene extends Phaser.Scene {
             // localStorage unavailable
         }
 
+        // Record holder name
+        var recordName = '';
+        try { recordName = localStorage.getItem('ff_record_name') || ''; } catch (e) {}
+        var highScoreDisplay = '최고 점수: ' + highScore.toLocaleString();
+        if (recordName && highScore > 0) {
+            highScoreDisplay += ' (' + recordName + ')';
+        }
+
         // High score display
-        this.add.text(W / 2, bottomY - 20, '최고 점수: ' + highScore.toLocaleString(), {
+        this.add.text(W / 2, bottomY - 20, highScoreDisplay, {
             fontFamily: 'Noto Sans KR, sans-serif',
             fontSize: '22px',
             color: '#FFD700',

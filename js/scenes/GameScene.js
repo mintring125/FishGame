@@ -23,9 +23,14 @@ window.GameScene = class GameScene extends Phaser.Scene {
     init(data) {
         data = data || {};
 
-        this._initLevel    = data.level || 1;
-        this._initScore    = data.score || 0;
-        this._initLives    = data.lives || window.Constants.MAX_LIVES;
+        this._initLevel = data.level || 1;
+        this._initScore = data.score || 0;
+        this._initLives = data.lives || window.Constants.MAX_LIVES;
+
+        // Ensure physics system is running
+        if (this.physics) {
+            this.physics.resume();
+        }
     }
 
     // ==================================================================
@@ -35,6 +40,17 @@ window.GameScene = class GameScene extends Phaser.Scene {
 
     create() {
         var C = window.Constants;
+        this._cleanedUp = false;
+
+        // ---- Safety: Ensure HUD is stopped from previous run ----
+        if (this.scene.isActive(C.SCENES.HUD)) {
+            this.scene.stop(C.SCENES.HUD);
+        }
+
+        // ---- Safety: Resume audio context if suspended ----
+        if (this.sound && this.sound.context && this.sound.context.state === 'suspended') {
+            this.sound.context.resume();
+        }
 
         // ----------------------------------------------------------
         // 1. BACKGROUND: Ocean gradient
@@ -59,11 +75,11 @@ window.GameScene = class GameScene extends Phaser.Scene {
         // ----------------------------------------------------------
         // 5. SYSTEMS
         // ----------------------------------------------------------
-        this.spawnSystem    = new window.SpawnSystem(this);
-        this.frenzySystem   = new window.FrenzySystem(this);
-        this.scoreSystem    = this._createScoreSystem();
+        this.spawnSystem = new window.SpawnSystem(this);
+        this.frenzySystem = new window.FrenzySystem(this);
+        this.scoreSystem = this._createScoreSystem();
         this.particleSystem = this._createParticleSystem();
-        this.soundSystem    = this._getOrCreateSoundSystem();
+        this.soundSystem = this._getOrCreateSoundSystem();
 
         // Apply initial state from init data
         this.spawnSystem.setLevel(this._initLevel);
@@ -94,7 +110,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
         // 6.5 VIRTUAL JOYSTICK
         // ----------------------------------------------------------
         this.joystick = new window.VirtualJoystick(this, C.GAME_WIDTH - 120, C.GAME_HEIGHT - 120, {
-            baseRadius: 70,
+            baseRadius: 50,
             thumbRadius: 25,
             baseAlpha: 0.3,
             thumbAlpha: 0.5
@@ -103,12 +119,12 @@ window.GameScene = class GameScene extends Phaser.Scene {
         // ----------------------------------------------------------
         // 7. GAME STATE
         // ----------------------------------------------------------
-        this.lives            = this._initLives;
-        this.currentLevel     = this._initLevel;
-        this.isGameOver       = false;
-        this.isLevelClearing  = false;
-        this.isStunned        = false;
-        this.stunTimer        = 0;
+        this.lives = this._initLives;
+        this.currentLevel = this._initLevel;
+        this.isGameOver = false;
+        this.isLevelClearing = false;
+        this.isStunned = false;
+        this.stunTimer = 0;
         this._levelScoreAtStart = this._initScore;
 
         // ----------------------------------------------------------
@@ -241,8 +257,8 @@ window.GameScene = class GameScene extends Phaser.Scene {
         if (!playerSprite.active || !enemySprite.active) return;
         if (!enemySprite.body || !enemySprite.body.enable) return;
 
-        var C      = window.Constants;
-        var scene  = playerSprite.scene;
+        var C = window.Constants;
+        var scene = playerSprite.scene;
         var player = scene.player;
 
         // Retrieve size from the enemy object or its data store
@@ -365,7 +381,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
         if (!playerSprite.active || !powerUpSprite.active) return;
         if (!powerUpSprite.body || !powerUpSprite.body.enable) return;
 
-        var C     = window.Constants;
+        var C = window.Constants;
         var scene = playerSprite.scene;
 
         // Determine the power-up type
@@ -413,7 +429,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
         if (!playerSprite.active || !hazardSprite.active) return;
         if (!hazardSprite.body || !hazardSprite.body.enable) return;
 
-        var C     = window.Constants;
+        var C = window.Constants;
         var scene = playerSprite.scene;
 
         // Respect invincibility
@@ -548,10 +564,10 @@ window.GameScene = class GameScene extends Phaser.Scene {
                 self._cleanupScene();
 
                 self.scene.start(C.SCENES.LEVEL_CLEAR, {
-                    level:     self.currentLevel,
-                    score:     score,
+                    level: self.currentLevel,
+                    score: score,
                     nextLevel: nextLevel,
-                    lives:     self.lives
+                    lives: self.lives
                 });
             }
         });
@@ -621,8 +637,8 @@ window.GameScene = class GameScene extends Phaser.Scene {
                     self._cleanupScene();
 
                     self.scene.start(C.SCENES.GAME_OVER, {
-                        score:     finalScore,
-                        level:     self.currentLevel,
+                        score: finalScore,
+                        level: self.currentLevel,
                         highScore: highScore
                     });
                 });
@@ -671,9 +687,9 @@ window.GameScene = class GameScene extends Phaser.Scene {
         this._cleanupScene();
 
         this.scene.start(C.SCENES.GAME_OVER, {
-            score:        finalScore,
-            level:        C.LEVEL_COUNT,
-            highScore:    highScore,
+            score: finalScore,
+            level: C.LEVEL_COUNT,
+            highScore: highScore,
             gameComplete: true
         });
     }
@@ -693,8 +709,8 @@ window.GameScene = class GameScene extends Phaser.Scene {
         // Draw vertical gradient from SURFACE (top) to DEEP (bottom)
         var steps = 32;
         var stepHeight = Math.ceil(C.GAME_HEIGHT / steps);
-        var topColor   = Phaser.Display.Color.IntegerToColor(C.OCEAN_COLORS.SURFACE);
-        var botColor   = Phaser.Display.Color.IntegerToColor(C.OCEAN_COLORS.DEEP);
+        var topColor = Phaser.Display.Color.IntegerToColor(C.OCEAN_COLORS.SURFACE);
+        var botColor = Phaser.Display.Color.IntegerToColor(C.OCEAN_COLORS.DEEP);
 
         for (var i = 0; i < steps; i++) {
             var t = i / (steps - 1);
@@ -778,8 +794,8 @@ window.GameScene = class GameScene extends Phaser.Scene {
             ray.setAngle(baseAngle);
 
             // Store animation data
-            ray._baseX      = x;
-            ray._baseAngle  = baseAngle;
+            ray._baseX = x;
+            ray._baseAngle = baseAngle;
             ray._driftPhase = Math.random() * Math.PI * 2;
             ray._driftSpeed = 0.3 + Math.random() * 0.3;
             ray._driftAmplitudeX = 30 + Math.random() * 40;
@@ -817,9 +833,9 @@ window.GameScene = class GameScene extends Phaser.Scene {
                 gfx.setPosition(bx, by);
                 gfx.setDepth(C.DEPTH.BUBBLES);
 
-                gfx._speed      = speed;
+                gfx._speed = speed;
                 gfx._wobbleTime = Math.random() * Math.PI * 2;
-                gfx._size        = size;
+                gfx._size = size;
 
                 this._bubbles.push(gfx);
             }
@@ -857,7 +873,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
                 return this.score >= target;
             },
             reset: function () { this.score = 0; this.currentLevel = 1; },
-            destroy: function () {}
+            destroy: function () { }
         };
     }
 
@@ -870,12 +886,12 @@ window.GameScene = class GameScene extends Phaser.Scene {
         }
         // Minimal fallback - no-op particle system
         return {
-            emitEatParticles:        function () {},
-            emitGrowParticles:       function () {},
-            emitDeathParticles:      function () {},
-            emitPowerUpParticles:    function () {},
-            emitLevelClearParticles: function () {},
-            destroy:                 function () {}
+            emitEatParticles: function () { },
+            emitGrowParticles: function () { },
+            emitDeathParticles: function () { },
+            emitPowerUpParticles: function () { },
+            emitLevelClearParticles: function () { },
+            destroy: function () { }
         };
     }
 
@@ -894,11 +910,11 @@ window.GameScene = class GameScene extends Phaser.Scene {
         }
         // Minimal fallback - no-op sound system
         return {
-            play:    function () {},
-            playBGM: function () {},
-            stopBGM: function () {},
-            stopAll: function () {},
-            destroy: function () {}
+            play: function () { },
+            playBGM: function () { },
+            stopBGM: function () { },
+            stopAll: function () { },
+            destroy: function () { }
         };
     }
 
@@ -944,8 +960,8 @@ window.GameScene = class GameScene extends Phaser.Scene {
      */
     _collisionProcessCallback(playerSprite, otherSprite) {
         return playerSprite.active && otherSprite.active &&
-               playerSprite.body && playerSprite.body.enable &&
-               otherSprite.body && otherSprite.body.enable;
+            playerSprite.body && playerSprite.body.enable &&
+            otherSprite.body && otherSprite.body.enable;
     }
 
     // ==================================================================
@@ -953,7 +969,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
     // ==================================================================
 
     _setupEventListeners() {
-        var C    = window.Constants;
+        var C = window.Constants;
         var self = this;
 
         // ---- Pause request from HUD ----
@@ -1017,7 +1033,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
     _updateEnvironment(time, delta) {
         var C = window.Constants;
         var deltaSeconds = delta / 1000;
-        var timeSeconds  = time / 1000;
+        var timeSeconds = time / 1000;
 
         // ---- Parallax scrolling ----
         for (var i = 0; i < this._parallaxLayers.length; i++) {
@@ -1137,10 +1153,26 @@ window.GameScene = class GameScene extends Phaser.Scene {
      * before transitioning to another scene.
      */
     _cleanupScene() {
+        // Prevent double cleanup
+        if (this._cleanedUp) return;
+        this._cleanedUp = true;
+
+        // Remove event listeners first to prevent re-entry
+        this.events.off('requestPause');
+        this.events.off('resume');
+        this.events.off('playerGrew');
+        this.events.off('frenzyTierUp');
+        this.events.off('shutdown');
+        this.events.off('sleep');
+
         // Stop HUD scene
         var C = window.Constants;
-        if (this.scene.isActive(C.SCENES.HUD)) {
-            this.scene.stop(C.SCENES.HUD);
+        try {
+            if (this.scene.isActive(C.SCENES.HUD)) {
+                this.scene.stop(C.SCENES.HUD);
+            }
+        } catch (e) {
+            // Scene may already be stopped
         }
 
         // Remove keyboard listeners
@@ -1162,14 +1194,6 @@ window.GameScene = class GameScene extends Phaser.Scene {
         if (this.frenzySystem) {
             this.frenzySystem.reset();
         }
-
-        // Remove event listeners to prevent leaks
-        this.events.off('requestPause');
-        this.events.off('resume');
-        this.events.off('playerGrew');
-        this.events.off('frenzyTierUp');
-        this.events.off('shutdown');
-        this.events.off('sleep');
     }
 
     /**
@@ -1197,8 +1221,8 @@ window.GameScene = class GameScene extends Phaser.Scene {
 
         // Light rays, bubbles, parallax layers are scene children and will be
         // destroyed automatically by Phaser's scene lifecycle.
-        this._lightRays      = [];
-        this._bubbles        = [];
+        this._lightRays = [];
+        this._bubbles = [];
         this._parallaxLayers = [];
     }
 };
