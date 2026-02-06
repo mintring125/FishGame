@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <title>피딩 프렌지 - Fish Feeding Game</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="game-container"></div>
+
+    <!-- Phaser 3 Engine -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+
+    <!-- Constants & Utilities (load first - no dependencies) -->
+    <script src="js/utils/Constants.js"></script>
+    <script src="js/utils/AssetGenerator.js"></script>
+
+    <!-- Game Objects (depend on Constants) -->
+    <script src="js/objects/PlayerFish.js"></script>
+    <script src="js/objects/EnemyFish.js"></script>
+    <script src="js/objects/PowerUp.js"></script>
+    <script src="js/objects/Hazard.js"></script>
+    <script src="js/objects/Bubble.js"></script>
+
+    <!-- Systems (depend on Constants and Objects) -->
+    <script src="js/systems/SpawnSystem.js"></script>
+    <script src="js/systems/FrenzySystem.js"></script>
+    <script src="js/systems/ScoreSystem.js"></script>
+    <script src="js/systems/ParticleSystem.js"></script>
+    <script src="js/systems/SoundSystem.js"></script>
+
+    <!-- Scenes (depend on everything above) -->
+    <script src="js/scenes/BootScene.js"></script>
+    <script src="js/scenes/MenuScene.js"></script>
+    <script src="js/scenes/TutorialScene.js"></script>
+    <script src="js/scenes/GameScene.js"></script>
+    <script src="js/scenes/HUDScene.js"></script>
+    <script src="js/scenes/PauseScene.js"></script>
+    <script src="js/scenes/LevelClearScene.js"></script>
+    <script src="js/scenes/GameOverScene.js"></script>
+
+    <!-- Main Entry Point (load last - depends on all scenes) -->
+    <script src="js/main.js"></script>
+</body>
+</html>
