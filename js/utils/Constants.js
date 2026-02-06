@@ -244,8 +244,8 @@ window.Constants = {
     HUD_FONT_SIZE: 28,
     HUD_SCORE_COLOR: '#FFFFFF',
     HUD_COMBO_FONT_SIZE: 36,
-    HUD_LIFE_ICON_SIZE: 24,
-    HUD_LIFE_ICON_SPACING: 8,
+    HUD_LIFE_ICON_SIZE: 40,
+    HUD_LIFE_ICON_SPACING: 12,
 
     // ========================================
     // DIFFICULTY SCALING PER LEVEL

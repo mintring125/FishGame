@@ -426,6 +426,39 @@ window.GameScene = class GameScene extends Phaser.Scene {
     }
 
     /**
+     * Player overlaps a heart pickup. Grants +1 life (capped at MAX_LIVES).
+     */
+    handleHeartCollision(playerSprite, heartSprite) {
+        if (!playerSprite.active || !heartSprite.active) return;
+        if (!heartSprite.body || !heartSprite.body.enable) return;
+
+        var C = window.Constants;
+        var scene = playerSprite.scene;
+
+        // Cap at max lives
+        if (scene.lives >= C.MAX_LIVES) {
+            return;
+        }
+
+        scene.lives++;
+
+        // Sound
+        scene._playSound(C.AUDIO_KEYS.SFX_POWER_UP);
+
+        // Particles
+        if (scene.particleSystem && scene.particleSystem.emitPowerUpParticles) {
+            scene.particleSystem.emitPowerUpParticles(heartSprite.x, heartSprite.y, 0xFF4444);
+        }
+
+        // Remove the heart
+        heartSprite.setActive(false).setVisible(false);
+        if (heartSprite.body) heartSprite.body.enable = false;
+
+        // Notify HUD
+        scene.events.emit('playerHit', { lives: scene.lives });
+    }
+
+    /**
      * Player overlaps a hazard (jellyfish or pufferfish).
      */
     handleHazardCollision(playerSprite, hazardSprite) {
@@ -952,6 +985,15 @@ window.GameScene = class GameScene extends Phaser.Scene {
             this.player,
             pools.hazard,
             this.handleHazardCollision,
+            this._collisionProcessCallback,
+            this
+        );
+
+        // Player vs Heart pickups
+        this.physics.add.overlap(
+            this.player,
+            pools.heart,
+            this.handleHeartCollision,
             this._collisionProcessCallback,
             this
         );

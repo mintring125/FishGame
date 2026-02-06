@@ -44,7 +44,7 @@ window.HUDScene = class HUDScene extends Phaser.Scene {
         }).setDepth(DEPTH.HUD);
 
         // Lives display (below score)
-        const livesY = HUD_PADDING + HUD_FONT_SIZE + 10;
+        const livesY = HUD_PADDING + HUD_FONT_SIZE + 20;
         this.heartsGroup = this.add.container(HUD_PADDING, livesY);
         this.hearts = [];
 

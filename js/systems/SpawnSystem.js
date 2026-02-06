@@ -20,13 +20,15 @@ window.SpawnSystem = class SpawnSystem {
         this.pools = {
             enemy:   scene.physics.add.group({ classType: Phaser.GameObjects.Sprite, maxSize: C.MAX_FISH_ON_SCREEN, runChildUpdate: false }),
             powerUp: scene.physics.add.group({ classType: Phaser.GameObjects.Sprite, maxSize: 10, runChildUpdate: false }),
-            hazard:  scene.physics.add.group({ classType: Phaser.GameObjects.Sprite, maxSize: C.HAZARD_MAX_ON_SCREEN + 2, runChildUpdate: false })
+            hazard:  scene.physics.add.group({ classType: Phaser.GameObjects.Sprite, maxSize: C.HAZARD_MAX_ON_SCREEN + 2, runChildUpdate: false }),
+            heart:   scene.physics.add.group({ classType: Phaser.GameObjects.Sprite, maxSize: 3, runChildUpdate: false })
         };
 
         // ---- Timing ----
         this.spawnTimer      = 0;
         this.powerUpTimer    = 0;
         this.hazardTimer     = 0;
+        this.heartTimer      = 0;
 
         // ---- Level / difficulty cache ----
         this.currentLevel    = 1;
@@ -85,6 +87,13 @@ window.SpawnSystem = class SpawnSystem {
         if (this.hazardTimer >= 2000) {
             this.hazardTimer -= 2000;
             this.spawnHazard();
+        }
+
+        // ---- Heart spawning (checked every ~5 s) ----
+        this.heartTimer += delta;
+        if (this.heartTimer >= 5000) {
+            this.heartTimer -= 5000;
+            this.spawnHeart();
         }
 
         // ---- Cull off-screen objects ----
@@ -290,6 +299,70 @@ window.SpawnSystem = class SpawnSystem {
         return hz;
     }
 
+    /**
+     * Possibly spawn a heart pickup that grants +1 life.
+     * Very rare — about 3% chance per check.
+     */
+    spawnHeart() {
+        var C = window.Constants;
+
+        // Only spawn if player is missing lives
+        var scene = this.scene;
+        if (scene.lives >= C.MAX_LIVES) {
+            return null;
+        }
+
+        // 3% chance
+        if (Math.random() > 0.03) {
+            return null;
+        }
+
+        // Max 1 heart on screen at a time
+        if (this.getActiveHearts().length >= 1) {
+            return null;
+        }
+
+        var fromLeft = Math.random() < 0.5;
+        var margin = C.SPAWN_MARGIN;
+        var x = fromLeft ? -margin : C.GAME_WIDTH + margin;
+        var y = Phaser.Math.Between(
+            Math.floor(C.GAME_HEIGHT * 0.15),
+            Math.floor(C.GAME_HEIGHT * 0.85)
+        );
+
+        var speed = Phaser.Math.FloatBetween(40, 70);
+        var velocityX = fromLeft ? speed : -speed;
+
+        var heart = this.pools.heart.get(x, y, 'heart_full');
+        if (!heart) {
+            return null;
+        }
+
+        heart.setActive(true).setVisible(true);
+        heart.setPosition(x, y);
+        heart.setTexture('heart_full');
+        heart.setDepth(C.DEPTH.POWER_UPS);
+        heart.setScale(0.6);
+
+        heart.body.enable = true;
+        heart.body.setVelocityX(velocityX);
+        heart.body.setVelocityY(Phaser.Math.FloatBetween(-10, 10));
+
+        heart.setData('type', 'heart');
+
+        // Gentle bob tween
+        this.scene.tweens.add({
+            targets: heart,
+            y: y + 12,
+            duration: 800,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        return heart;
+    }
+
     // ------------------------------------------------------------------
     // CULLING
     // ------------------------------------------------------------------
@@ -323,6 +396,7 @@ window.SpawnSystem = class SpawnSystem {
         this.pools.enemy.getChildren().forEach(deactivate);
         this.pools.powerUp.getChildren().forEach(deactivate);
         this.pools.hazard.getChildren().forEach(deactivate);
+        this.pools.heart.getChildren().forEach(deactivate);
     }
 
     // ------------------------------------------------------------------
@@ -348,6 +422,13 @@ window.SpawnSystem = class SpawnSystem {
      */
     getActiveHazards() {
         return this.pools.hazard.getChildren().filter(function (h) { return h.active; });
+    }
+
+    /**
+     * @returns {Phaser.GameObjects.Sprite[]} All currently active heart pickups.
+     */
+    getActiveHearts() {
+        return this.pools.heart.getChildren().filter(function (h) { return h.active; });
     }
 
     // ------------------------------------------------------------------
@@ -384,6 +465,7 @@ window.SpawnSystem = class SpawnSystem {
         this.spawnTimer   = 0;
         this.powerUpTimer = 0;
         this.hazardTimer  = 0;
+        this.heartTimer   = 0;
     }
 
     /**
@@ -393,6 +475,7 @@ window.SpawnSystem = class SpawnSystem {
         this.pools.enemy.destroy(true);
         this.pools.powerUp.destroy(true);
         this.pools.hazard.destroy(true);
+        this.pools.heart.destroy(true);
 
         this.scene = null;
     }
