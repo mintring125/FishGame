@@ -938,6 +938,11 @@ window.MenuScene = class MenuScene extends Phaser.Scene {
         // Try registry first, then window
         var ss = this.game.registry.get('soundSystem');
         if (!ss) ss = window.soundSystem;
+        // Fallback: create if missing
+        if (!ss && window.SoundSystem) {
+            ss = new window.SoundSystem(this);
+            this.game.registry.set('soundSystem', ss);
+        }
         return ss || null;
     }
 

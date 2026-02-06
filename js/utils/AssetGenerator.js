@@ -425,6 +425,783 @@ window.AssetGenerator = (function () {
         ctx.restore();
     }
 
+    /**
+     * Draw a round/chubby fish (pufferfish-like but cute).
+     */
+    function drawRoundFish(ctx, w, h, colors, isPlayer) {
+        var cx = w * 0.48;
+        var cy = h * 0.5;
+        var bodyW = w * 0.4;
+        var bodyH = h * 0.55;
+
+        var bodyStr = hexIntToStr(colors.body);
+        var bellyStr = hexIntToStr(colors.belly);
+        var finStr = hexIntToStr(colors.fin);
+        var outlineStr = hexIntToStr(colors.outline);
+
+        ctx.save();
+
+        // ---- TAIL FIN (stubby) ----
+        ctx.save();
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.moveTo(cx - bodyW * 0.9, cy);
+        ctx.bezierCurveTo(
+            cx - bodyW * 1.1, cy - bodyH * 0.4,
+            cx - bodyW * 1.2, cy - bodyH * 0.3,
+            cx - bodyW * 1.15, cy
+        );
+        ctx.bezierCurveTo(
+            cx - bodyW * 1.2, cy + bodyH * 0.3,
+            cx - bodyW * 1.1, cy + bodyH * 0.4,
+            cx - bodyW * 0.9, cy
+        );
+        ctx.closePath();
+        ctx.fillStyle = finStr;
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+
+        // ---- DORSAL FIN (small) ----
+        ctx.save();
+        ctx.globalAlpha = 0.6;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - bodyH * 0.95);
+        ctx.bezierCurveTo(
+            cx + bodyW * 0.15, cy - bodyH * 1.2,
+            cx - bodyW * 0.2, cy - bodyH * 1.15,
+            cx - bodyW * 0.3, cy - bodyH * 0.85
+        );
+        ctx.closePath();
+        ctx.fillStyle = finStr;
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+
+        // ---- PECTORAL FIN (stubby) ----
+        ctx.save();
+        ctx.globalAlpha = 0.55;
+        ctx.beginPath();
+        ctx.moveTo(cx + bodyW * 0.2, cy + bodyH * 0.2);
+        ctx.bezierCurveTo(
+            cx + bodyW * 0.3, cy + bodyH * 0.6,
+            cx - bodyW * 0.1, cy + bodyH * 0.65,
+            cx - bodyW * 0.05, cy + bodyH * 0.3
+        );
+        ctx.closePath();
+        ctx.fillStyle = finStr;
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+
+        // ---- BODY (round/chubby) ----
+        ctx.save();
+        ctx.shadowColor = hexAlpha(colors.body, 0.3);
+        ctx.shadowBlur = bodyW * 0.15;
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, bodyW * 0.9, 0, Math.PI * 2);
+        ctx.closePath();
+
+        var bodyGrad = ctx.createRadialGradient(cx - bodyW * 0.3, cy - bodyH * 0.3, 0, cx, cy, bodyW * 0.9);
+        bodyGrad.addColorStop(0, lighten(colors.body, 0.4));
+        bodyGrad.addColorStop(0.5, bodyStr);
+        bodyGrad.addColorStop(1, darken(colors.body, 0.2));
+        ctx.fillStyle = bodyGrad;
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = outlineStr;
+        ctx.lineWidth = Math.max(1.5, bodyW * 0.04);
+        ctx.stroke();
+        ctx.restore();
+
+        // ---- BELLY HIGHLIGHT ----
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx + bodyW * 0.2, cy + bodyH * 0.3, bodyW * 0.5, 0, Math.PI * 2);
+        ctx.closePath();
+        var bellyGrad = ctx.createRadialGradient(
+            cx + bodyW * 0.2, cy + bodyH * 0.3, bodyW * 0.1,
+            cx + bodyW * 0.2, cy + bodyH * 0.3, bodyW * 0.5
+        );
+        bellyGrad.addColorStop(0, hexAlpha(colors.belly, 0.7));
+        bellyGrad.addColorStop(0.6, hexAlpha(colors.belly, 0.2));
+        bellyGrad.addColorStop(1, hexAlpha(colors.belly, 0.0));
+        ctx.fillStyle = bellyGrad;
+        ctx.fill();
+        ctx.restore();
+
+        // ---- SCALE PATTERN ----
+        ctx.save();
+        ctx.globalAlpha = 0.08;
+        ctx.strokeStyle = lighten(colors.body, 0.5);
+        ctx.lineWidth = 0.8;
+        var scaleSize = bodyW * 0.18;
+        for (var row = 0; row < 5; row++) {
+            for (var col = 0; col < 5; col++) {
+                var sx = cx - bodyW * 0.6 + col * scaleSize + (row % 2 === 0 ? scaleSize * 0.5 : 0);
+                var sy = cy - bodyH * 0.6 + row * scaleSize * 0.75;
+                ctx.beginPath();
+                ctx.arc(sx, sy, scaleSize * 0.4, 0, Math.PI, false);
+                ctx.stroke();
+            }
+        }
+        ctx.restore();
+
+        // ---- MOUTH (small) ----
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx + bodyW * 0.75, cy + bodyH * 0.05, bodyH * 0.12, 0, Math.PI);
+        ctx.strokeStyle = outlineStr;
+        ctx.lineWidth = Math.max(1, bodyW * 0.03);
+        ctx.stroke();
+        ctx.restore();
+
+        // ---- EYE (bigger for cute look) ----
+        var eyeX = cx + bodyW * 0.4;
+        var eyeY = cy - bodyH * 0.2;
+        var eyeR = bodyH * 0.28;
+
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.2)';
+        ctx.shadowBlur = 3;
+        ctx.beginPath();
+        ctx.arc(eyeX, eyeY, eyeR, 0, Math.PI * 2);
+        var eyeGrad = ctx.createRadialGradient(eyeX - eyeR * 0.2, eyeY - eyeR * 0.2, 0, eyeX, eyeY, eyeR);
+        eyeGrad.addColorStop(0, '#FFFFFF');
+        eyeGrad.addColorStop(1, '#E8E8E8');
+        ctx.fillStyle = eyeGrad;
+        ctx.fill();
+        ctx.strokeStyle = outlineStr;
+        ctx.lineWidth = Math.max(1, eyeR * 0.12);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // Iris
+        var irisR = eyeR * 0.55;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(eyeX + eyeR * 0.1, eyeY, irisR, 0, Math.PI * 2);
+        ctx.fillStyle = '#1A1A2E';
+        ctx.fill();
+        ctx.restore();
+
+        // Pupil
+        var pupilR = eyeR * 0.3;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(eyeX + eyeR * 0.12, eyeY, pupilR, 0, Math.PI * 2);
+        ctx.fillStyle = '#000000';
+        ctx.fill();
+        ctx.restore();
+
+        // Eye highlight
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(eyeX, eyeY - eyeR * 0.15, eyeR * 0.2, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.fill();
+        ctx.restore();
+
+        ctx.restore();
+    }
+
+    /**
+     * Draw a long/eel-like fish (barracuda-style).
+     */
+    function drawLongFish(ctx, w, h, colors, isPlayer) {
+        var cx = w * 0.48;
+        var cy = h * 0.5;
+        var bodyW = w * 0.65;
+        var bodyH = h * 0.22;
+
+        var bodyStr = hexIntToStr(colors.body);
+        var bellyStr = hexIntToStr(colors.belly);
+        var finStr = hexIntToStr(colors.fin);
+        var outlineStr = hexIntToStr(colors.outline);
+
+        ctx.save();
+
+        // ---- TAIL FIN (streamlined) ----
+        ctx.save();
+        ctx.globalAlpha = 0.75;
+        ctx.beginPath();
+        ctx.moveTo(cx - bodyW * 0.85, cy);
+        ctx.bezierCurveTo(
+            cx - bodyW * 1.0, cy - bodyH * 1.2,
+            cx - bodyW * 1.15, cy - bodyH * 0.9,
+            cx - bodyW * 1.1, cy
+        );
+        ctx.bezierCurveTo(
+            cx - bodyW * 1.15, cy + bodyH * 0.9,
+            cx - bodyW * 1.0, cy + bodyH * 1.2,
+            cx - bodyW * 0.85, cy
+        );
+        ctx.closePath();
+        ctx.fillStyle = finStr;
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+
+        // ---- DORSAL FIN (small, streamlined) ----
+        ctx.save();
+        ctx.globalAlpha = 0.6;
+        ctx.beginPath();
+        ctx.moveTo(cx - bodyW * 0.2, cy - bodyH * 0.95);
+        ctx.bezierCurveTo(
+            cx - bodyW * 0.1, cy - bodyH * 1.4,
+            cx - bodyW * 0.4, cy - bodyH * 1.3,
+            cx - bodyW * 0.45, cy - bodyH * 0.85
+        );
+        ctx.closePath();
+        ctx.fillStyle = finStr;
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+
+        // ---- PECTORAL FIN (small) ----
+        ctx.save();
+        ctx.globalAlpha = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(cx + bodyW * 0.1, cy + bodyH * 0.2);
+        ctx.bezierCurveTo(
+            cx + bodyW * 0.15, cy + bodyH * 0.8,
+            cx - bodyW * 0.05, cy + bodyH * 0.85,
+            cx - bodyW * 0.05, cy + bodyH * 0.3
+        );
+        ctx.closePath();
+        ctx.fillStyle = finStr;
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+
+        // ---- BODY (elongated ellipse) ----
+        ctx.save();
+        ctx.shadowColor = hexAlpha(colors.body, 0.3);
+        ctx.shadowBlur = bodyW * 0.1;
+
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, bodyW * 0.85, bodyH * 0.95, 0, 0, Math.PI * 2);
+        ctx.closePath();
+
+        var bodyGrad = ctx.createLinearGradient(cx, cy - bodyH, cx, cy + bodyH);
+        bodyGrad.addColorStop(0, lighten(colors.body, 0.25));
+        bodyGrad.addColorStop(0.4, bodyStr);
+        bodyGrad.addColorStop(0.6, bodyStr);
+        bodyGrad.addColorStop(1, darken(colors.body, 0.25));
+        ctx.fillStyle = bodyGrad;
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = outlineStr;
+        ctx.lineWidth = Math.max(1.5, bodyW * 0.025);
+        ctx.stroke();
+        ctx.restore();
+
+        // ---- BELLY HIGHLIGHT ----
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(cx + bodyW * 0.2, cy + bodyH * 0.35, bodyW * 0.5, bodyH * 0.4, 0, 0, Math.PI * 2);
+        ctx.closePath();
+        var bellyGrad = ctx.createRadialGradient(
+            cx + bodyW * 0.2, cy + bodyH * 0.35, bodyH * 0.1,
+            cx + bodyW * 0.2, cy + bodyH * 0.35, bodyH * 0.6
+        );
+        bellyGrad.addColorStop(0, hexAlpha(colors.belly, 0.7));
+        bellyGrad.addColorStop(0.6, hexAlpha(colors.belly, 0.2));
+        bellyGrad.addColorStop(1, hexAlpha(colors.belly, 0.0));
+        ctx.fillStyle = bellyGrad;
+        ctx.fill();
+        ctx.restore();
+
+        // ---- SCALE PATTERN (horizontal lines) ----
+        ctx.save();
+        ctx.globalAlpha = 0.1;
+        ctx.strokeStyle = lighten(colors.body, 0.4);
+        ctx.lineWidth = 0.6;
+        for (var line = 0; line < 7; line++) {
+            var ly = cy - bodyH * 0.7 + line * bodyH * 0.25;
+            ctx.beginPath();
+            ctx.moveTo(cx - bodyW * 0.7, ly);
+            ctx.lineTo(cx + bodyW * 0.7, ly);
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        // ---- MOUTH (small) ----
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(cx + bodyW * 0.83, cy);
+        ctx.lineTo(cx + bodyW * 0.72, cy + bodyH * 0.1);
+        ctx.strokeStyle = outlineStr;
+        ctx.lineWidth = Math.max(1, bodyW * 0.02);
+        ctx.stroke();
+        ctx.restore();
+
+        // ---- EYE (small) ----
+        var eyeX = cx + bodyW * 0.55;
+        var eyeY = cy - bodyH * 0.15;
+        var eyeR = bodyH * 0.35;
+
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.2)';
+        ctx.shadowBlur = 2;
+        ctx.beginPath();
+        ctx.arc(eyeX, eyeY, eyeR, 0, Math.PI * 2);
+        var eyeGrad = ctx.createRadialGradient(eyeX - eyeR * 0.2, eyeY - eyeR * 0.2, 0, eyeX, eyeY, eyeR);
+        eyeGrad.addColorStop(0, '#FFFFFF');
+        eyeGrad.addColorStop(1, '#E8E8E8');
+        ctx.fillStyle = eyeGrad;
+        ctx.fill();
+        ctx.strokeStyle = outlineStr;
+        ctx.lineWidth = Math.max(1, eyeR * 0.1);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // Iris
+        var irisR = eyeR * 0.6;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(eyeX + eyeR * 0.1, eyeY, irisR, 0, Math.PI * 2);
+        ctx.fillStyle = '#1A1A2E';
+        ctx.fill();
+        ctx.restore();
+
+        // Pupil
+        var pupilR = eyeR * 0.3;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(eyeX + eyeR * 0.12, eyeY, pupilR, 0, Math.PI * 2);
+        ctx.fillStyle = '#000000';
+        ctx.fill();
+        ctx.restore();
+
+        // Eye highlight
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(eyeX, eyeY - eyeR * 0.2, eyeR * 0.15, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.fill();
+        ctx.restore();
+
+        ctx.restore();
+    }
+
+    /**
+     * Draw an angular/aggressive fish (swordfish-style).
+     */
+    function drawAngularFish(ctx, w, h, colors, isPlayer) {
+        var cx = w * 0.48;
+        var cy = h * 0.5;
+        var bodyW = w * 0.52;
+        var bodyH = h * 0.38;
+
+        var bodyStr = hexIntToStr(colors.body);
+        var bellyStr = hexIntToStr(colors.belly);
+        var finStr = hexIntToStr(colors.fin);
+        var outlineStr = hexIntToStr(colors.outline);
+
+        ctx.save();
+
+        // ---- TAIL FIN (sharp angles) ----
+        ctx.save();
+        ctx.globalAlpha = 0.75;
+        ctx.beginPath();
+        ctx.moveTo(cx - bodyW * 0.8, cy);
+        ctx.lineTo(cx - bodyW * 1.3, cy - bodyH * 0.8);
+        ctx.lineTo(cx - bodyW * 1.1, cy);
+        ctx.lineTo(cx - bodyW * 1.3, cy + bodyH * 0.8);
+        ctx.closePath();
+        ctx.fillStyle = finStr;
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+
+        // ---- DORSAL FIN (pointed) ----
+        ctx.save();
+        ctx.globalAlpha = 0.65;
+        ctx.beginPath();
+        ctx.moveTo(cx - bodyW * 0.1, cy - bodyH * 0.9);
+        ctx.lineTo(cx + bodyW * 0.05, cy - bodyH * 1.5);
+        ctx.lineTo(cx - bodyW * 0.4, cy - bodyH * 0.8);
+        ctx.closePath();
+        ctx.fillStyle = finStr;
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+
+        // ---- PECTORAL FIN ----
+        ctx.save();
+        ctx.globalAlpha = 0.55;
+        ctx.beginPath();
+        ctx.moveTo(cx + bodyW * 0.15, cy + bodyH * 0.15);
+        ctx.lineTo(cx + bodyW * 0.25, cy + bodyH * 0.8);
+        ctx.lineTo(cx - bodyW * 0.05, cy + bodyH * 0.35);
+        ctx.closePath();
+        ctx.fillStyle = finStr;
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+
+        // ---- BODY (diamond/angular shape) ----
+        ctx.save();
+        ctx.shadowColor = hexAlpha(colors.body, 0.3);
+        ctx.shadowBlur = bodyW * 0.15;
+
+        ctx.beginPath();
+        // Front point (mouth)
+        ctx.moveTo(cx + bodyW * 0.9, cy);
+        // Top edge
+        ctx.lineTo(cx + bodyW * 0.2, cy - bodyH * 1.0);
+        ctx.lineTo(cx - bodyW * 0.3, cy - bodyH * 0.85);
+        // Back point
+        ctx.lineTo(cx - bodyW * 0.85, cy);
+        // Bottom edge
+        ctx.lineTo(cx - bodyW * 0.3, cy + bodyH * 0.85);
+        ctx.lineTo(cx + bodyW * 0.2, cy + bodyH * 1.0);
+        ctx.closePath();
+
+        var bodyGrad = ctx.createLinearGradient(cx, cy - bodyH, cx, cy + bodyH);
+        bodyGrad.addColorStop(0, lighten(colors.body, 0.3));
+        bodyGrad.addColorStop(0.4, bodyStr);
+        bodyGrad.addColorStop(0.6, bodyStr);
+        bodyGrad.addColorStop(1, darken(colors.body, 0.2));
+        ctx.fillStyle = bodyGrad;
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = outlineStr;
+        ctx.lineWidth = Math.max(1.5, bodyW * 0.03);
+        ctx.stroke();
+        ctx.restore();
+
+        // ---- BELLY HIGHLIGHT ----
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(cx + bodyW * 0.6, cy + bodyH * 0.1);
+        ctx.lineTo(cx + bodyW * 0.1, cy + bodyH * 0.7);
+        ctx.lineTo(cx - bodyW * 0.4, cy + bodyH * 0.5);
+        ctx.lineTo(cx - bodyW * 0.1, cy);
+        ctx.closePath();
+        var bellyGrad = ctx.createRadialGradient(
+            cx + bodyW * 0.1, cy + bodyH * 0.3, bodyH * 0.1,
+            cx + bodyW * 0.1, cy + bodyH * 0.3, bodyH * 0.7
+        );
+        bellyGrad.addColorStop(0, hexAlpha(colors.belly, 0.7));
+        bellyGrad.addColorStop(0.6, hexAlpha(colors.belly, 0.2));
+        bellyGrad.addColorStop(1, hexAlpha(colors.belly, 0.0));
+        ctx.fillStyle = bellyGrad;
+        ctx.fill();
+        ctx.restore();
+
+        // ---- SCALE PATTERN (angular) ----
+        ctx.save();
+        ctx.globalAlpha = 0.12;
+        ctx.strokeStyle = lighten(colors.body, 0.5);
+        ctx.lineWidth = 0.8;
+        for (var i = 0; i < 8; i++) {
+            var lx = cx - bodyW * 0.6 + i * bodyW * 0.2;
+            ctx.beginPath();
+            ctx.moveTo(lx, cy - bodyH * 0.6);
+            ctx.lineTo(lx + bodyW * 0.1, cy);
+            ctx.lineTo(lx, cy + bodyH * 0.6);
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        // ---- MOUTH (aggressive) ----
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(cx + bodyW * 0.88, cy);
+        ctx.lineTo(cx + bodyW * 0.72, cy + bodyH * 0.15);
+        ctx.strokeStyle = outlineStr;
+        ctx.lineWidth = Math.max(1.5, bodyW * 0.03);
+        ctx.stroke();
+        ctx.restore();
+
+        // ---- EYE (aggressive shape) ----
+        var eyeX = cx + bodyW * 0.45;
+        var eyeY = cy - bodyH * 0.2;
+        var eyeR = bodyH * 0.22;
+
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.2)';
+        ctx.shadowBlur = 3;
+        ctx.beginPath();
+        // Angular eye shape
+        ctx.ellipse(eyeX, eyeY, eyeR, eyeR * 0.8, -0.2, 0, Math.PI * 2);
+        var eyeGrad = ctx.createRadialGradient(eyeX - eyeR * 0.2, eyeY - eyeR * 0.2, 0, eyeX, eyeY, eyeR);
+        eyeGrad.addColorStop(0, '#FFFFFF');
+        eyeGrad.addColorStop(1, '#E8E8E8');
+        ctx.fillStyle = eyeGrad;
+        ctx.fill();
+        ctx.strokeStyle = outlineStr;
+        ctx.lineWidth = Math.max(1, eyeR * 0.12);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // Iris (red tint for aggression)
+        var irisR = eyeR * 0.6;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(eyeX + eyeR * 0.12, eyeY, irisR, 0, Math.PI * 2);
+        ctx.fillStyle = '#3D1010';
+        ctx.fill();
+        ctx.restore();
+
+        // Pupil
+        var pupilR = eyeR * 0.32;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(eyeX + eyeR * 0.15, eyeY, pupilR, 0, Math.PI * 2);
+        ctx.fillStyle = '#000000';
+        ctx.fill();
+        ctx.restore();
+
+        // Eye highlight
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(eyeX, eyeY - eyeR * 0.2, eyeR * 0.18, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.fill();
+        ctx.restore();
+
+        ctx.restore();
+    }
+
+    /**
+     * Draw a flat/tropical fish (angelfish-style).
+     */
+    function drawFlatFish(ctx, w, h, colors, isPlayer) {
+        var cx = w * 0.48;
+        var cy = h * 0.5;
+        var bodyW = w * 0.35;
+        var bodyH = h * 0.6;
+
+        var bodyStr = hexIntToStr(colors.body);
+        var bellyStr = hexIntToStr(colors.belly);
+        var finStr = hexIntToStr(colors.fin);
+        var outlineStr = hexIntToStr(colors.outline);
+
+        ctx.save();
+
+        // ---- TAIL FIN ----
+        ctx.save();
+        ctx.globalAlpha = 0.75;
+        ctx.beginPath();
+        ctx.moveTo(cx - bodyW * 0.75, cy);
+        ctx.bezierCurveTo(
+            cx - bodyW * 1.0, cy - bodyH * 0.5,
+            cx - bodyW * 1.2, cy - bodyH * 0.4,
+            cx - bodyW * 1.1, cy
+        );
+        ctx.bezierCurveTo(
+            cx - bodyW * 1.2, cy + bodyH * 0.4,
+            cx - bodyW * 1.0, cy + bodyH * 0.5,
+            cx - bodyW * 0.75, cy
+        );
+        ctx.closePath();
+        ctx.fillStyle = finStr;
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+
+        // ---- DORSAL FIN (long, flowing) ----
+        ctx.save();
+        ctx.globalAlpha = 0.65;
+        ctx.beginPath();
+        ctx.moveTo(cx + bodyW * 0.1, cy - bodyH * 0.85);
+        ctx.bezierCurveTo(
+            cx + bodyW * 0.3, cy - bodyH * 1.35,
+            cx - bodyW * 0.3, cy - bodyH * 1.3,
+            cx - bodyW * 0.5, cy - bodyH * 0.7
+        );
+        ctx.bezierCurveTo(
+            cx - bodyW * 0.35, cy - bodyH * 0.75,
+            cx, cy - bodyH * 0.8,
+            cx + bodyW * 0.1, cy - bodyH * 0.85
+        );
+        ctx.closePath();
+        var dorsalGrad = ctx.createLinearGradient(cx, cy - bodyH * 1.35, cx, cy - bodyH * 0.7);
+        dorsalGrad.addColorStop(0, hexAlpha(colors.fin, 0.4));
+        dorsalGrad.addColorStop(1, finStr);
+        ctx.fillStyle = dorsalGrad;
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+
+        // ---- VENTRAL FIN (long, flowing) ----
+        ctx.save();
+        ctx.globalAlpha = 0.65;
+        ctx.beginPath();
+        ctx.moveTo(cx + bodyW * 0.1, cy + bodyH * 0.85);
+        ctx.bezierCurveTo(
+            cx + bodyW * 0.3, cy + bodyH * 1.35,
+            cx - bodyW * 0.3, cy + bodyH * 1.3,
+            cx - bodyW * 0.5, cy + bodyH * 0.7
+        );
+        ctx.bezierCurveTo(
+            cx - bodyW * 0.35, cy + bodyH * 0.75,
+            cx, cy + bodyH * 0.8,
+            cx + bodyW * 0.1, cy + bodyH * 0.85
+        );
+        ctx.closePath();
+        var ventralGrad = ctx.createLinearGradient(cx, cy + bodyH * 0.7, cx, cy + bodyH * 1.35);
+        ventralGrad.addColorStop(0, finStr);
+        ventralGrad.addColorStop(1, hexAlpha(colors.fin, 0.4));
+        ctx.fillStyle = ventralGrad;
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+
+        // ---- PECTORAL FIN ----
+        ctx.save();
+        ctx.globalAlpha = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(cx + bodyW * 0.2, cy + bodyH * 0.1);
+        ctx.bezierCurveTo(
+            cx + bodyW * 0.35, cy + bodyH * 0.5,
+            cx, cy + bodyH * 0.55,
+            cx - bodyW * 0.1, cy + bodyH * 0.25
+        );
+        ctx.closePath();
+        ctx.fillStyle = finStr;
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+
+        // ---- BODY (tall, narrow ellipse) ----
+        ctx.save();
+        ctx.shadowColor = hexAlpha(colors.body, 0.3);
+        ctx.shadowBlur = bodyW * 0.2;
+
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, bodyW * 0.75, bodyH * 0.85, 0, 0, Math.PI * 2);
+        ctx.closePath();
+
+        var bodyGrad = ctx.createLinearGradient(cx - bodyW, cy, cx + bodyW, cy);
+        bodyGrad.addColorStop(0, darken(colors.body, 0.2));
+        bodyGrad.addColorStop(0.3, bodyStr);
+        bodyGrad.addColorStop(0.7, bodyStr);
+        bodyGrad.addColorStop(1, lighten(colors.body, 0.3));
+        ctx.fillStyle = bodyGrad;
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = outlineStr;
+        ctx.lineWidth = Math.max(1.5, bodyW * 0.04);
+        ctx.stroke();
+        ctx.restore();
+
+        // ---- BELLY HIGHLIGHT ----
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(cx + bodyW * 0.25, cy, bodyW * 0.4, bodyH * 0.6, 0, 0, Math.PI * 2);
+        ctx.closePath();
+        var bellyGrad = ctx.createRadialGradient(
+            cx + bodyW * 0.25, cy, bodyW * 0.1,
+            cx + bodyW * 0.25, cy, bodyW * 0.4
+        );
+        bellyGrad.addColorStop(0, hexAlpha(colors.belly, 0.7));
+        bellyGrad.addColorStop(0.6, hexAlpha(colors.belly, 0.2));
+        bellyGrad.addColorStop(1, hexAlpha(colors.belly, 0.0));
+        ctx.fillStyle = bellyGrad;
+        ctx.fill();
+        ctx.restore();
+
+        // ---- STRIPE PATTERN (vertical) ----
+        ctx.save();
+        ctx.globalAlpha = 0.15;
+        ctx.fillStyle = darken(colors.body, 0.4);
+        for (var i = 0; i < 3; i++) {
+            var sx = cx - bodyW * 0.4 + i * bodyW * 0.4;
+            ctx.beginPath();
+            ctx.ellipse(sx, cy, bodyW * 0.08, bodyH * 0.7, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+
+        // ---- MOUTH (small) ----
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx + bodyW * 0.7, cy, bodyH * 0.08, 0, Math.PI);
+        ctx.strokeStyle = outlineStr;
+        ctx.lineWidth = Math.max(1, bodyW * 0.03);
+        ctx.stroke();
+        ctx.restore();
+
+        // ---- EYE ----
+        var eyeX = cx + bodyW * 0.45;
+        var eyeY = cy - bodyH * 0.25;
+        var eyeR = bodyH * 0.18;
+
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.2)';
+        ctx.shadowBlur = 3;
+        ctx.beginPath();
+        ctx.arc(eyeX, eyeY, eyeR, 0, Math.PI * 2);
+        var eyeGrad = ctx.createRadialGradient(eyeX - eyeR * 0.2, eyeY - eyeR * 0.2, 0, eyeX, eyeY, eyeR);
+        eyeGrad.addColorStop(0, '#FFFFFF');
+        eyeGrad.addColorStop(1, '#E8E8E8');
+        ctx.fillStyle = eyeGrad;
+        ctx.fill();
+        ctx.strokeStyle = outlineStr;
+        ctx.lineWidth = Math.max(1, eyeR * 0.12);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // Iris
+        var irisR = eyeR * 0.6;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(eyeX + eyeR * 0.12, eyeY, irisR, 0, Math.PI * 2);
+        ctx.fillStyle = '#1A1A2E';
+        ctx.fill();
+        ctx.restore();
+
+        // Pupil
+        var pupilR = eyeR * 0.32;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(eyeX + eyeR * 0.15, eyeY, pupilR, 0, Math.PI * 2);
+        ctx.fillStyle = '#000000';
+        ctx.fill();
+        ctx.restore();
+
+        // Eye highlight
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(eyeX, eyeY - eyeR * 0.2, eyeR * 0.18, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.fill();
+        ctx.restore();
+
+        ctx.restore();
+    }
+
+    /**
+     * Get the shape drawing function based on color index.
+     */
+    function getShapeForColor(colorIndex) {
+        if (colorIndex === 0 || colorIndex === 1) {
+            return drawFish; // Tropical Orange, Ocean Blue
+        } else if (colorIndex === 2 || colorIndex === 3) {
+            return drawRoundFish; // Coral Pink, Emerald Green
+        } else if (colorIndex === 4 || colorIndex === 5) {
+            return drawLongFish; // Royal Purple, Sunshine Yellow
+        } else if (colorIndex === 6) {
+            return drawAngularFish; // Deep Red
+        } else if (colorIndex === 7) {
+            return drawFlatFish; // Cyan Teal
+        }
+        return drawFish; // Fallback
+    }
+
     // ========================================
     // TEXTURE GENERATION FUNCTIONS
     // ========================================
@@ -445,7 +1222,11 @@ window.AssetGenerator = (function () {
                 var key = 'fish_' + ci + '_' + si;
 
                 var t = createTex(scene, key, fw, fh);
-                drawFish(t.ctx, fw, fh, fishColors[ci], false);
+
+                // Get the shape function for this color
+                var drawFn = getShapeForColor(ci);
+                drawFn(t.ctx, fw, fh, fishColors[ci], false);
+
                 finalize(t);
             }
         }

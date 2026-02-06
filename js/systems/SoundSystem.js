@@ -23,6 +23,7 @@ class SoundSystem {
     this.bgmNode = null;
     this.bgmGain = null;
     this.currentBGM = null;
+    this.bgmOscillators = [];
 
     // Master gain nodes
     if (this.audioContext) {
@@ -458,6 +459,12 @@ class SoundSystem {
     const scheduleLoop = () => {
       if (this.currentBGM === null) return;
 
+      // Clear previous iteration's expired oscillators to prevent memory leak
+      this.bgmOscillators.forEach(node => {
+        try { node.disconnect(); } catch (e) {}
+      });
+      this.bgmOscillators = [];
+
       const startTime = this.audioContext.currentTime;
 
       // Schedule melody notes
@@ -480,6 +487,8 @@ class SoundSystem {
         osc.start(startTime + offset);
         osc.stop(startTime + offset + note.duration);
 
+        this.bgmOscillators.push(osc, gain);
+
         offset += note.duration;
       });
 
@@ -501,6 +510,8 @@ class SoundSystem {
         osc.start(startTime + offset);
         osc.stop(startTime + offset + note.duration);
 
+        this.bgmOscillators.push(osc, gain);
+
         offset += note.duration;
       });
 
@@ -519,6 +530,20 @@ class SoundSystem {
       clearTimeout(this.bgmNode);
       this.bgmNode = null;
     }
+
+    // Stop and disconnect all BGM oscillators and gain nodes
+    this.bgmOscillators.forEach(node => {
+      try {
+        if (node.stop) {
+          node.stop();
+        }
+        node.disconnect();
+      } catch (e) {
+        // Node may have already stopped or been disconnected
+      }
+    });
+    this.bgmOscillators = [];
+
     this.currentBGM = null;
   }
 

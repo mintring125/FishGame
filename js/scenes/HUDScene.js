@@ -105,9 +105,9 @@ window.HUDScene = class HUDScene extends Phaser.Scene {
             strokeThickness: 4
         }).setOrigin(0.5, 0).setDepth(DEPTH.HUD).setVisible(false);
 
-        // Pause button (top-right corner)
-        const pauseButtonX = GAME_WIDTH - HUD_PADDING - 60;
-        const pauseButtonY = GAME_HEIGHT - HUD_PADDING - 40;
+        // Pause button (top-right area, below level display)
+        const pauseButtonX = GAME_WIDTH - HUD_PADDING - 30;
+        const pauseButtonY = HUD_PADDING + HUD_FONT_SIZE + 45;
 
         this.pauseButton = this.add.text(pauseButtonX, pauseButtonY, '멈춤', {
             fontFamily: 'Noto Sans KR, sans-serif',
@@ -194,8 +194,8 @@ window.HUDScene = class HUDScene extends Phaser.Scene {
             this.showStunIndicator(data.duration);
         });
 
-        events.on('powerUpActivated', (data) => {
-            this.addPowerUpIndicator(data.type, data.duration);
+        events.on('powerUpActivated', (type, duration) => {
+            this.addPowerUpIndicator(type, duration);
         });
 
         events.on('powerUpExpired', (type) => {

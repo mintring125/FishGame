@@ -91,6 +91,16 @@ window.GameScene = class GameScene extends Phaser.Scene {
         this.player.setDepth(C.DEPTH.PLAYER);
 
         // ----------------------------------------------------------
+        // 6.5 VIRTUAL JOYSTICK
+        // ----------------------------------------------------------
+        this.joystick = new window.VirtualJoystick(this, C.GAME_WIDTH - 120, C.GAME_HEIGHT - 120, {
+            baseRadius: 70,
+            thumbRadius: 25,
+            baseAlpha: 0.3,
+            thumbAlpha: 0.5
+        });
+
+        // ----------------------------------------------------------
         // 7. GAME STATE
         // ----------------------------------------------------------
         this.lives            = this._initLives;
@@ -173,11 +183,23 @@ window.GameScene = class GameScene extends Phaser.Scene {
         var activeEnemies = this.spawnSystem.getActiveEnemies();
         for (var i = 0; i < activeEnemies.length; i++) {
             var enemy = activeEnemies[i];
-            if (enemy.update) {
+            if (enemy.update && typeof enemy.update === 'function') {
                 enemy.update(time, delta);
             }
+            // setEdibleIndicator may not exist on pool sprites - use tint directly
             if (enemy.setEdibleIndicator) {
                 enemy.setEdibleIndicator(playerSize);
+            } else if (enemy.active) {
+                var eSize = enemy.getData('sizeIndex');
+                if (typeof eSize === 'number') {
+                    if (eSize < playerSize) {
+                        enemy.setTint(0x88FF88);
+                    } else if (eSize > playerSize) {
+                        enemy.setTint(0xFF8888);
+                    } else {
+                        enemy.clearTint();
+                    }
+                }
             }
         }
 
@@ -1125,6 +1147,12 @@ window.GameScene = class GameScene extends Phaser.Scene {
         if (this._escKey) {
             this._escKey.removeAllListeners();
             this._escKey = null;
+        }
+
+        // Clean up joystick
+        if (this.joystick) {
+            this.joystick.destroy();
+            this.joystick = null;
         }
 
         // Clean up systems
