@@ -155,12 +155,8 @@ class GameOverScene extends Phaser.Scene {
     playAgainBtn.setDepth(1000);
     playAgainBtn.setInteractive({ useHandCursor: true });
     playAgainBtn.on('pointerdown', () => {
-      const sceneManager = this.scene;
-      window.setTimeout(() => {
-        try { sceneManager.stop('HUDScene'); } catch (e) {}
-        try { sceneManager.stop('GameOverScene'); } catch (e) {}
-        sceneManager.start('GameScene', { level: 1, score: 0 });
-      }, 10);
+      try { this.scene.stop('HUDScene'); } catch (e) {}
+      this.scene.start('GameScene', { level: 1, score: 0 });
     });
 
     // Menu button
@@ -178,12 +174,8 @@ class GameOverScene extends Phaser.Scene {
     menuBtn.setDepth(1000);
     menuBtn.setInteractive({ useHandCursor: true });
     menuBtn.on('pointerdown', () => {
-      const sceneManager = this.scene;
-      window.setTimeout(() => {
-        try { sceneManager.stop('HUDScene'); } catch (e) {}
-        try { sceneManager.stop('GameOverScene'); } catch (e) {}
-        sceneManager.start('MenuScene');
-      }, 10);
+      try { this.scene.stop('HUDScene'); } catch (e) {}
+      this.scene.start('MenuScene');
     });
 
     // Button hover effects

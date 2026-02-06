@@ -6,6 +6,8 @@
  * Renders a semi-transparent base circle with a movable thumb knob.
  * Provides direction vector and force for smooth directional movement.
  * Supports both mouse and multi-touch input.
+ * 
+ * FIXED POSITION MODE: The joystick base remains stationary.
  */
 
 window.VirtualJoystick = class VirtualJoystick {
@@ -24,9 +26,12 @@ window.VirtualJoystick = class VirtualJoystick {
         options = options || {};
 
         this.scene = scene;
+
+        // Fixed position
         this.centerX = x;
         this.centerY = y;
-        this.baseRadius = options.baseRadius || 70;
+
+        this.baseRadius = options.baseRadius || 60; // Slightly larger default for better precision
         this.thumbRadius = options.thumbRadius || 25;
         this._baseAlphaIdle = options.baseAlpha || 0.3;
         this._thumbAlphaIdle = options.thumbAlpha || 0.5;
@@ -40,10 +45,6 @@ window.VirtualJoystick = class VirtualJoystick {
 
         // Track which pointer is controlling the joystick
         this._activePointerId = null;
-
-        // Current thumb offset from center
-        this._thumbX = 0;
-        this._thumbY = 0;
 
         // Create graphics
         this._createVisuals();
@@ -88,8 +89,6 @@ window.VirtualJoystick = class VirtualJoystick {
         this._glowGraphics.clear();
         this._glowGraphics.lineStyle(3, 0x00BFFF, alpha * 0.6);
         this._glowGraphics.strokeCircle(this.centerX, this.centerY, this.baseRadius + 4);
-        this._glowGraphics.lineStyle(1, 0x00BFFF, alpha * 0.3);
-        this._glowGraphics.strokeCircle(this.centerX, this.centerY, this.baseRadius + 8);
 
         // Base fill
         this._baseGraphics.clear();
@@ -132,25 +131,23 @@ window.VirtualJoystick = class VirtualJoystick {
         var self = this;
 
         this._onPointerDown = function (pointer) {
-            // Only capture if no pointer is already controlling the joystick
+            // If already active, ignore other pointers
             if (self._activePointerId !== null) return;
 
-            // Claim pointer immediately to prevent race with other pointerdown events
-            self._activePointerId = pointer.id;
-
-            // Check if the pointer is within the joystick base area (with some extra padding)
+            // Check distance from FIXED center
             var dx = pointer.x - self.centerX;
             var dy = pointer.y - self.centerY;
             var dist = Math.sqrt(dx * dx + dy * dy);
 
-            // Use a generous touch area (base radius + 20px padding)
-            if (dist <= self.baseRadius + 20) {
+            // Hit test: allow touching slightly outside the visual base for usability
+            // (Base Radius + 30px padding)
+            if (dist <= self.baseRadius + 30) {
+                self._activePointerId = pointer.id;
                 self.isActive = true;
+
+                // Immediately update position
                 self._updateThumbPosition(pointer.x, pointer.y);
                 self._drawBase(true);
-            } else {
-                // Not in joystick area - release the claim
-                self._activePointerId = null;
             }
         };
 
@@ -163,15 +160,16 @@ window.VirtualJoystick = class VirtualJoystick {
         this._onPointerUp = function (pointer) {
             if (self._activePointerId === null || pointer.id !== self._activePointerId) return;
 
+            // Release logic
             self._activePointerId = null;
             self.isActive = false;
+
+            // Output reset
             self.direction.x = 0;
             self.direction.y = 0;
             self.force = 0;
-            self._thumbX = 0;
-            self._thumbY = 0;
 
-            // Snap thumb back to center
+            // Visual reset to center
             self._drawBase(false);
             self._drawThumb(self.centerX, self.centerY, false);
         };
@@ -182,9 +180,8 @@ window.VirtualJoystick = class VirtualJoystick {
     }
 
     /**
-     * Update the thumb position and calculate direction/force from pointer coordinates.
-     * @param {number} pointerX - Pointer x in screen coordinates
-     * @param {number} pointerY - Pointer y in screen coordinates
+     * Update the thumb position and calculate direction/force.
+     * STRICTLY keeps the base fixed.
      */
     _updateThumbPosition(pointerX, pointerY) {
         var dx = pointerX - this.centerX;
@@ -193,61 +190,45 @@ window.VirtualJoystick = class VirtualJoystick {
 
         // Clamp thumb within base radius
         if (dist > this.baseRadius) {
-            dx = (dx / dist) * this.baseRadius;
-            dy = (dy / dist) * this.baseRadius;
+            var scale = this.baseRadius / dist;
+            dx *= scale;
+            dy *= scale;
             dist = this.baseRadius;
         }
 
-        this._thumbX = dx;
-        this._thumbY = dy;
-
         // Calculate normalized direction
-        if (dist > 2) {
+        if (dist > 3) { // Deadzone of 3px
+            var rawForce = dist / this.baseRadius;
+
+            // Normalize direction
             this.direction.x = dx / dist;
             this.direction.y = dy / dist;
+
+            // Force: 0 to 1
+            this.force = Phaser.Math.Clamp(rawForce, 0, 1);
         } else {
             this.direction.x = 0;
             this.direction.y = 0;
+            this.force = 0;
         }
 
-        // Force: 0 to 1 based on distance from center
-        this.force = Phaser.Math.Clamp(dist / this.baseRadius, 0, 1);
-
-        // Redraw thumb at new position
+        // Redraw thumb at calculated clamped position
         this._drawThumb(this.centerX + dx, this.centerY + dy, true);
     }
 
     /**
-     * Called each frame. Currently a no-op but available for future use.
-     */
-    update() {
-        // Reserved for future per-frame logic (e.g., smooth return animation)
-    }
-
-    /**
-     * Clean up all graphics and input listeners.
+     * Clean up
      */
     destroy() {
-        // Remove input listeners
         if (this.scene && this.scene.input) {
             this.scene.input.off('pointerdown', this._onPointerDown);
             this.scene.input.off('pointermove', this._onPointerMove);
             this.scene.input.off('pointerup', this._onPointerUp);
         }
 
-        // Destroy graphics objects
-        if (this._glowGraphics) {
-            this._glowGraphics.destroy();
-            this._glowGraphics = null;
-        }
-        if (this._baseGraphics) {
-            this._baseGraphics.destroy();
-            this._baseGraphics = null;
-        }
-        if (this._thumbGraphics) {
-            this._thumbGraphics.destroy();
-            this._thumbGraphics = null;
-        }
+        if (this._glowGraphics) this._glowGraphics.destroy();
+        if (this._baseGraphics) this._baseGraphics.destroy();
+        if (this._thumbGraphics) this._thumbGraphics.destroy();
 
         this.scene = null;
     }

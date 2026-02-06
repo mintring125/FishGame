@@ -197,10 +197,10 @@ window.Constants = {
     // VISUAL & EFFECTS
     // ========================================
     OCEAN_COLORS: {
-        SURFACE:   0x0099CC,    // Light blue at top
-        MID:       0x006994,    // Mid ocean blue
-        DEEP:      0x003366,    // Deep blue at bottom
-        ABYSS:     0x001B33     // Darkest depths
+        SURFACE:   0x33CCFF,    // Light blue at top
+        MID:       0x1A9FD4,    // Mid ocean blue
+        DEEP:      0x0D5F8A,    // Deep blue at bottom
+        ABYSS:     0x0A3D5C     // Darkest depths
     },
 
     BUBBLE_COUNT: 20,               // Background bubble count
@@ -208,11 +208,11 @@ window.Constants = {
     BUBBLE_MAX_SIZE: 8,
     BUBBLE_MIN_SPEED: 20,
     BUBBLE_MAX_SPEED: 60,
-    BUBBLE_ALPHA: 0.3,
+    BUBBLE_ALPHA: 0.4,
 
     // Light rays from surface
-    LIGHT_RAY_COUNT: 5,
-    LIGHT_RAY_ALPHA: 0.08,
+    LIGHT_RAY_COUNT: 7,
+    LIGHT_RAY_ALPHA: 0.14,
 
     // ========================================
     // ANIMATION

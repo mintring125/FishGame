@@ -116,10 +116,10 @@ window.BootScene = class BootScene extends Phaser.Scene {
 
         // Draw 4-stop vertical gradient using horizontal bands
         var stops = [
-            { y: 0,         color: colors.SURFACE },
-            { y: H * 0.33,  color: colors.MID },
-            { y: H * 0.66,  color: colors.DEEP },
-            { y: H,         color: colors.ABYSS }
+            { y: 0, color: colors.SURFACE },
+            { y: H * 0.33, color: colors.MID },
+            { y: H * 0.66, color: colors.DEEP },
+            { y: H, color: colors.ABYSS }
         ];
 
         var bandCount = 80;
@@ -354,7 +354,9 @@ window.BootScene = class BootScene extends Phaser.Scene {
         this.input.once('pointerdown', function () {
             // Resume audio context if suspended
             if (this.sound && this.sound.context && this.sound.context.state === 'suspended') {
-                this.sound.context.resume();
+                this.sound.context.resume().catch(function (e) {
+                    console.warn('[BootScene] AudioContext resume failed:', e);
+                });
             }
 
             // Camera fade out then start menu

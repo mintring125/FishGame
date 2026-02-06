@@ -110,8 +110,8 @@ window.GameScene = class GameScene extends Phaser.Scene {
         // 6.5 VIRTUAL JOYSTICK
         // ----------------------------------------------------------
         this.joystick = new window.VirtualJoystick(this, C.GAME_WIDTH - 120, C.GAME_HEIGHT - 120, {
-            baseRadius: 50,
-            thumbRadius: 25,
+            baseRadius: 60,
+            thumbRadius: 28,
             baseAlpha: 0.3,
             thumbAlpha: 0.5
         });
@@ -159,6 +159,7 @@ window.GameScene = class GameScene extends Phaser.Scene {
         // 12. CAMERA SETUP
         // ----------------------------------------------------------
         this.cameras.main.setBackgroundColor(C.OCEAN_COLORS.MID);
+        this.cameras.main.resetFX();
         // We will call camera shake on damage events (see handleFishCollision)
     }
 
@@ -181,6 +182,8 @@ window.GameScene = class GameScene extends Phaser.Scene {
                 this.stunTimer = 0;
                 this.player.clearTint();
                 this.player.setAlpha(1);
+                // Grant invincibility after stun so player can escape
+                this.player.setInvincible(C.INVINCIBILITY_TIME);
             }
             // While stunned: still update environment but player cannot move
             this._updateEnvironment(time, delta);
